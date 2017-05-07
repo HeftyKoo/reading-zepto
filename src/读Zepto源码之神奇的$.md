@@ -120,9 +120,9 @@ zepto.isZ = function(object) {
 
 既然看了 `Z` 函数，就顺便也将 `isZ` 也一起看了吧。`isZ` 函数用来判断参数 `object` 是否为 `Z` 的实例，这在 `init` 中会用到。
 
-## `##  的实现 zepto.init 函数
+## $的实现 zepto.init 函数
 
-### `###  的实现
+### $的实现
 
 ```javascript
 $ = function(selector, context) {
@@ -162,7 +162,7 @@ zepto.init = function(selector, context) {
 
  这个 `init` 方法代码量不多，但是有大量的 `if else`， 希望我可以说得清楚
 
-###  `###   的用法
+###  $的用法
 
 ```javascript
 $(selector, [context])   ⇒ collection  // 用法1
