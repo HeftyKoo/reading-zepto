@@ -1,4 +1,4 @@
-# 读Zepto源码之神奇的`# 
+# 读Zepto源码之神奇的`# # 
 
 经过前面三章的铺垫，这篇终于写到了戏肉。在用 `zepto` 时，肯定离不开这个神奇的 `$` 符号，这篇文章将会看看 `zepto` 是如何实现 `$` 的。
 
@@ -55,7 +55,7 @@ simpleSelectorRE = /^[\w-]*$/,
 ###  变量
 
 * `found`： 已经找到的元素
-*  `maybeID = selector[0] == '#'`： 判断选择器的第一个字符是否为 `#`， 如果是 `# ` ，则可能是 `id` 选择器
+* `maybeID = selector[0] == '#'`： 判断选择器的第一个字符是否为 `#`， 如果是 `# ` ，则可能是 `id` 选择器
 * `maybeClass = !maybeID && selector[0] == '.'` 如果不是 `id` 选择器，并且选择器的第一个字符为 `.` ，则可能是 `class` 选择器
 * `nameOnly = maybeID || maybeClass ? selector.slice(1) : selector` ，如果为 `id` 选择器或者 `class` 选择器，则将第一个字符去掉
 * `isSimple = simpleSelectorRE.test(nameOnly)` 是否为单选择器，即 `.single` 的形式，不是 `.first .secend` 等形式
