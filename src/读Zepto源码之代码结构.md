@@ -94,14 +94,14 @@ zepto.isZ = function(object) {
 ## 参考
 
 * [zepto源码分析-代码结构](https://segmentfault.com/a/1190000007515865)
-
 * [zepto对象思想与源码分析](http://www.kancloud.cn/wangfupeng/zepto-design-srouce)
-
 * [zepto设计和源码分析](http://www.imooc.com/learn/745)
-
 * [zepto源码中关于`zepto.Z.prototype = $.fn`的问题](https://segmentfault.com/q/1010000005782663)
 
-  ​
+
+## License
+
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-nc-nd/4.0/)
 
 最后，所有文章都会同步发送到微信公众号上，欢迎关注,欢迎提意见：
 

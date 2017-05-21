@@ -313,10 +313,11 @@ methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'of
 ## 参考
 
 * [各浏览器对document.getElementById等方法的实现差异解析](http://www.jb51.net/article/44147.htm)
-
 * [Node.nodeType](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType)
 
-  ​
+## License
+
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-nc-nd/4.0/)
 
 最后，所有文章都会同步发送到微信公众号上，欢迎关注,欢迎提意见：  ![](https://segmentfault.com/img/bVCJ55?w=430&h=430) 
 
