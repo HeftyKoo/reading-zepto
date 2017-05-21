@@ -1,6 +1,6 @@
 # 读Zepto源码之集合操作
 
-接下来几个篇单，都会解读 zepto 中的跟 `dom` 相关的方法，也即源码 `$.fn` 对象中的方法。
+接下来几个篇章，都会解读 zepto 中的跟 `dom` 相关的方法，也即源码 `$.fn` 对象中的方法。
 
 读Zepto源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
 
