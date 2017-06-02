@@ -321,7 +321,9 @@ first: function() {
 
 `first` 是取集合中第一个元素，这个方法很简单，用索引 `0` 就可以取出来了，也就是 `this[0]` 。
 
-`el && !isObject(el)` 用来判断是否为 `zepto` 对象，如果不是，用 `$(el)` 包裹，确保返回的是 `zepto` 对象。
+上面已经实现了一个 `eq` 的方法，这里为什么不用 `eq` 呢？应该是出于性能的考量。`eq` 内部是用 `slice` 实现的，我做了个简单的测试，一个长度为100的数组，循环10万次，直接用索引值的时间为1ms，用 `slice` 是24ms。测试地址：[https://jsfiddle.net/57fk5ayf/](https://jsfiddle.net/57fk5ayf/)
+
+`el && !isObject(el)` 用来判断是否为 `zepto` 对象，如果不是，用 `$(el)` 包裹，确保返回的是 `zepto` 对象。这里主要要区分的是 `node` 节点。在《[读Zepto源码之内部方法](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%85%E9%83%A8%E6%96%B9%E6%B3%95.md#isfunction--isobject)》中，我们知道，`isObject` 最终是通过调用 `toString` 方法实现的。如果是 `node` 节点， `toString` 的结果是 `[object HTMLDivElement]` ，如果为 `zepto` 对象，返回的结果是 `[object Object]` 。因此为 `node` 节点时，`isObject` 返回的结果为 `false`。
 
 ### .last()
 
