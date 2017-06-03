@@ -4,6 +4,10 @@
 
 读Zepto源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
 
+## 源码版本
+
+本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
+
 ## .forEach()
 
 ```javascript
@@ -189,9 +193,6 @@ add: function(selector, context) {
 
 然后调用 `concat` 方法来合并两个集合，用内部方法 `uniq` 来过滤掉重复的项，`uniq` 方法在《[读Zepto源码之内部方法](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%85%E9%83%A8%E6%96%B9%E6%B3%95.md#uniq)》已经有论述。最后也是返回一个 `zepto` 集合。 
 
-## 源码版本
-
-本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
 ## 系列文章
 
