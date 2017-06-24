@@ -245,7 +245,7 @@ el.nodeName != null && el.nodeName.toUpperCase() === 'SCRIPT'
 !el.type || el.type === 'text/javascript'
 ```
 
-不存在 `type` 属性，或者 `type` 属性为 `'text/javascript'`。这里表示只处理 `javascript`，因为 `type` 属性不一定指定为 `text/javascript` ，只有指定为 `test/javascript` 或者为空时，才会按照 `javascript` 来处理。见[MDN文档<script>](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+不存在 `type` 属性，或者 `type` 属性为 `'text/javascript'`。这里表示只处理 `javascript`，因为 `type` 属性不一定指定为 `text/javascript` ，只有指定为 `test/javascript` 或者为空时，才会按照 `javascript` 来处理。见[MDN文档script](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
 
 ```javascript
 !el.src
@@ -473,7 +473,7 @@ clone: function() {
 * [Node.insertBefore()](https://developer.mozilla.org/en-US/docs/Web/API/Node/insertBefore)
 * [Node.cloneNode()](https://developer.mozilla.org/en-US/docs/Web/API/Node/cloneNode)
 * [Zepto源码分析-zepto模块](http://www.cnblogs.com/mominger/p/4369206.html)
-* [MDN文档<script>](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
+* [MDN文档script](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script)
 * [Node.ownerDocument](https://developer.mozilla.org/en-US/docs/Web/API/Node/ownerDocument)
 * [Document.defaultView](https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView)
 
@@ -481,6 +481,6 @@ clone: function() {
 
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-nc-nd/4.0/)
 
-最后，所有文章都会同步发送到微信公众号上，欢迎关注,欢迎提意见：  ![](https://segmentfault.com/img/bVCJ55?w=430&h=430) 
+最后，所有文章都会同步发送到微信公众号上，欢迎关注,欢迎提意见：  ![](https://user-gold-cdn.xitu.io/2017/5/30/76626b0be42083d36b36f4a117dc1873) 
 
 作者：对角另一面
