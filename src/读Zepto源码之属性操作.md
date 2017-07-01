@@ -627,6 +627,55 @@ this.each(function(idx) {
 
 设置值就相对简单了，调用的是 `css` 方法，直接设置对应的属性就可以了。关于 `css` 方法的实现，可以看看上篇：《[读Zepto源码之样式操作](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E6%A0%B7%E5%BC%8F%E6%93%8D%E4%BD%9C.md#css)》
 
+## 补漏
+
+### .ready()
+
+```javascript
+ready: function(callback) {
+  // don't use "interactive" on IE <= 10 (it can fired premature)
+  if (document.readyState === "complete" ||
+      (document.readyState !== "loading" && !document.documentElement.doScroll))
+    setTimeout(function() { callback($) }, 0)
+    else {
+      var handler = function() {
+        document.removeEventListener("DOMContentLoaded", handler, false)
+        window.removeEventListener("load", handler, false)
+        callback($)
+      }
+      document.addEventListener("DOMContentLoaded", handler, false)
+      window.addEventListener("load", handler, false)
+    }
+  return this
+},
+```
+
+本来想专门开篇文章来写 `ready` 的，要写的话要了解很多浏览器兼容的知识和浏览器的加载渲染机制，这方面的知识还不是我目前的重点，网上的资料也很多，就不花时间来论述了。
+
+使用 `zepto` 时，经常会这样用 `$(document).ready(function(){})` 或者 `$(function(){})` ，其实都是调用了 `ready` 方法。
+
+`ready` 方法，其实就是确保浏览器将元素加载后，再对元素进行操作。
+
+```javascript
+f (document.readyState === "complete" ||
+      (document.readyState !== "loading" && !document.documentElement.doScroll))
+    setTimeout(function() { callback($) }, 0)
+```
+
+这其实是一个兼容性的判断，在这种情况下，无法准确获知浏览器什么时候将元素加载完毕，采用 `setTimeout` 方法，延时 `0` 毫秒执行 `callback`。为什么延迟 `0` 毫秒就可以了呢，因为 `seTimeout` 会等元素加载完毕后再执行。
+
+```javascript
+var handler = function() {
+  document.removeEventListener("DOMContentLoaded", handler, false)
+  window.removeEventListener("load", handler, false)
+  callback($)
+}
+document.addEventListener("DOMContentLoaded", handler, false)
+window.addEventListener("load", handler, false)
+```
+
+否则监听 `DOMContentLoaded` 和 `load` ，事件触发时，执行 `handler` 方法， `handler` 方法中包含了已经清除事件监听的方法。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
