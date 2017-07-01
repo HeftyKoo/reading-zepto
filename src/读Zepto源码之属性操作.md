@@ -576,6 +576,57 @@ scrollLeft: function(value) {
 
 `scrollLeft` 原理同 `scrollTop` ，不再展开叙述。
 
+## width/height 方法生成器
+
+```javascript
+['width', 'height'].forEach(function(dimension) {
+  var dimensionProperty =
+      dimension.replace(/./, function(m) { return m[0].toUpperCase() })
+  $.fn[dimension] = function(value) {
+    var offset, el = this[0]
+    if (value === undefined) return isWindow(el) ? el['inner' + dimensionProperty] :
+    isDocument(el) ? el.documentElement['scroll' + dimensionProperty] :
+    (offset = this.offset()) && offset[dimension]
+    else return this.each(function(idx) {
+      el = $(this)
+      el.css(dimension, funcArg(this, value, idx, el[dimension]()))
+    })
+      }
+})
+```
+
+这个函数用来生成 `width` 和 `height` 方法。
+
+```javascript
+var dimensionProperty =
+      dimension.replace(/./, function(m) { return m[0].toUpperCase() })
+```
+
+这段将 `width` 和 `height` 的首字母变成大写，即 `Width` 和 `Height` 的形式。
+
+`width` 和 `height` 同样有获取值和设置值的功能，先来看获取值的实现。
+
+```javascript
+isWindow(el) ? el['inner' + dimensionProperty] :
+    isDocument(el) ? el.documentElement['scroll' + dimensionProperty] :
+    (offset = this.offset()) && offset[dimension]
+```
+
+如果第一个元素为 `window` 对象，则用 `innerWidth` 或 `innerHeight` 获取值。`window` 关于宽高的属性有 `innerWidth` 、 `innerHeight` 和 `outerWidth` 、`outerHeight` ，`inner` 相关的属性是获取浏览器视窗的宽度或者高度，而 `outer` 相关的属性获取是的整个浏览器的宽度或高度，包含标签栏，地址栏等。
+
+如果是 `document` 对象，则用 `el.documentElement.scrollWidth` 或 `el.documentElement.scrollHeight` 来获取值。`document.documentElement` 对象上有 `scrollWidth/scrollHeight` 、 `offsetWidth/offsetHeight` 和 `clientWidth/clientHeight` 等宽高相关的属性，三者有什么区别呢，可以看看这篇文章：《[web前端学习笔记---scrollWidth,clientWidth,offsetWidth的区别](http://www.cnblogs.com/kongxianghai/p/4192032.html)》 
+
+对于普通元素，获取值就简单了，调用的是上面说到过的 `offset` 方法，就能取到对应的 `width` 和 `height` 的值了。
+
+```javascript
+this.each(function(idx) {
+  el = $(this)
+  el.css(dimension, funcArg(this, value, idx, el[dimension]()))
+})
+```
+
+设置值就相对简单了，调用的是 `css` 方法，直接设置对应的属性就可以了。关于 `css` 方法的实现，可以看看上篇：《[读Zepto源码之样式操作](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E6%A0%B7%E5%BC%8F%E6%93%8D%E4%BD%9C.md#css)》
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
@@ -594,6 +645,10 @@ scrollLeft: function(value) {
 * [data-*](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/data-*)
 
 * [Element.getBoundingClientRect()](https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect)
+
+* [window](https://developer.mozilla.org/en-US/docs/Web/API/Window)
+
+* [web前端学习笔记---scrollWidth,clientWidth,offsetWidth的区别](http://www.cnblogs.com/kongxianghai/p/4192032.html)
 
   ​
 
