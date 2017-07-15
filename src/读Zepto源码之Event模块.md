@@ -8,15 +8,59 @@ Event 模块是 Zepto 必备的模块之一，由于对 Event Api 不太熟，Ev
 
 ### focus/blur 的事件模拟
 
+为什么要对 `focus` 和 `blur` 事件进行模拟呢？从 MDN 中可以看到， `focus` 事件和 `blur` 事件并不支持事件冒泡。不支持事件冒泡带来的直接后果是不能进行事件委托，所以需要对 `focus` 和 `blur` 事件进行模拟。
 
+除了 `focus` 事件和 `blur` 事件外，现代浏览器还支持 `focusin` 事件和 `focusout` 事件，他们和 `focus` 事件及 `blur` 事件的最主要区别是支持事件冒泡。因此可以用 `focusin` 和模拟 `focus` 事件的冒泡行为，用 `focusout` 事件来模拟 `blur` 事件的冒泡行为。
+
+我们可以通过以下代码来确定这四个事件的执行顺序：
+
+```html
+<input id="test" type="text" />
+```
+
+```javascript
+const target = document.getElementById('test')
+target.addEventListener('focusin', () => {console.log('focusin')})
+target.addEventListener('focus', () => {console.log('focus')})
+target.addEventListener('blur', () => {console.log('blur')})
+target.addEventListener('focusout', () => {console.log('focusout')})
+```
+
+在 `chrome59`下， `input` 聚焦和失焦时，控制台会打印出如下结果：
+
+```javascript
+'focus'
+'focusin'
+'blur'
+'focusout'
+```
+
+可以看到，在此浏览器中，事件的执行顺序应该是 `focus > focusin > blur > focusout`
+
+关于这几个事件更详细的描述，可以查看：《[说说focus /focusin /focusout /blur 事件](https://segmentfault.com/a/1190000003942014)》
+
+关于事件的执行顺序，我测试的结果与文章所说的有点不太一样。感兴趣的可以点击这个链接测试下[http://jsbin.com/nizugazamo/edit?html,js,console,output](http://jsbin.com/nizugazamo/edit?html,js,console,output)。不过我觉得执行顺序可以不必细究，可以将 `focusin` 作为 `focus` 事件的冒泡版本。
 
 ### mouseenter/mouseleave 的事件模拟
 
+跟 `focus` 和 `blur` 一样，`mouseenter` 和 `mouseleave` 也不支持事件的冒泡， 但是 `mouseover` 和 `mouseout` 支持事件冒泡，因此，这两个事件的冒泡处理也可以分别用 `mouseover` 和 `mouseout` 来模拟。
 
+在鼠标事件的 `event` 对象中，有一个 `relatedTarget` 的属性，从 [MDN:MouseEvent.relatedTarget](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/relatedTarget) 文档中，可以看到，`mouseover` 的 `relatedTarget` 指向的是移到目标节点上时所离开的节点（ `exited from` ），`mouseout` 的 `relatedTarget` 所指向的是离开所在的节点后所进入的节点（ ` entered to` ）。
 
-## Event 模块的核心思想
+另外 `mouseover` 事件会随着鼠标的移动不断触发，但是 `mouseenter` 事件只会在进入节点的那一刻触发一次。如果鼠标已经在目标节点上，那 `mouseover` 事件触发时的 `relatedTarget` 为当前节点。
 
+因此，要模拟 `mouseenter` 或 `mouseleave` 事件，只需要确定触发 `mouseover` 或 `mouseout` 事件上的 `relatedTarget` 不存在，或者 `relatedTarget` 不为当前节点，并且不为当前节点的子节点，避免子节点事件冒泡的影响。
 
+关于 `mouseenter` 和 `mouseleave` 的模拟， [谦龙](https://github.com/qianlongo) 有篇文章《[mouseenter与mouseover为何这般纠缠不清？](https://juejin.im/post/5935773fa0bb9f0058edbd61)》写得很清楚，建议读一下。
+
+## Event 模块的核心
+
+在 `Event` 模块中，主要做了如下几件事：
+
+* 提供简洁的API
+* 统一不同浏览器的 `event` 对象
+* 事件句柄缓存池，方便手动触发事件和解绑事件。
+* 事件委托
 
 ## 内部方法
 
@@ -58,8 +102,9 @@ Event 模块是 Zepto 必备的模块之一，由于对 Event Api 不太熟，Ev
 * [说说focus /focusin /focusout /blur 事件](https://segmentfault.com/a/1190000003942014)
 * [MDN:mouseenter](https://developer.mozilla.org/en-US/docs/Web/Events/mouseenter)
 * [MDN:mouseleave](mouseleave)
-* [Event reference](https://developer.mozilla.org/en-US/docs/Web/Events)
-* [Document.createEvent()](https://developer.mozilla.org/en-US/docs/Web/API/Document/createEvent)
+* [MDN:MouseEvent.relatedTarget](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/relatedTarget)
+* [MDN:Event reference](https://developer.mozilla.org/en-US/docs/Web/Events)
+* [MDN:Document.createEvent()](https://developer.mozilla.org/en-US/docs/Web/API/Document/createEvent)
 
 ## License
 
