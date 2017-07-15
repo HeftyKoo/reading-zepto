@@ -1,12 +1,40 @@
 # 读Zepto源码之Event模块
 
-Event模块是Zepto必备的模块之一，源码也比较复杂，希望这篇文章可以说得清楚。
+Event 模块是 Zepto 必备的模块之一，由于对 Event Api 不太熟，Event 对象也比较复杂，所以乍一看 Event 模块的源码，有点懵，细看下去，其实也不太复杂。
 
 读Zepto源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
+
+## 准备知识
+
+### focus/blur 的事件模拟
+
+
+
+### mouseenter/mouseleave 的事件模拟
+
+
+
+## Event 模块的核心思想
+
+
+
+## 内部方法
+
+
+
+## 工具函数
+
+
+
+## 方法
+
+
 
 ## 源码版本
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
+
+
 
 ## 系列文章
 
@@ -23,14 +51,15 @@ Event模块是Zepto必备的模块之一，源码也比较复杂，希望这篇�
 ## 参考
 
 * [mouseenter与mouseover为何这般纠缠不清？](https://juejin.im/post/5935773fa0bb9f0058edbd61)
-
 * [向zepto.js学习如何手动(trigger)触发DOM事件](https://juejin.im/post/5936f13b2f301e0058796482)
-
 * [谁说你只是 "会用"jQuery?](https://juejin.im/post/5939956b5c497d006b690fee)
-
 * [Zepto源码分析-event模块](http://www.cnblogs.com/mominger/p/4384692.html)
-
-  ​
+* [zepto源码之event.js](http://blog.csdn.net/u013055396/article/details/74907136)
+* [说说focus /focusin /focusout /blur 事件](https://segmentfault.com/a/1190000003942014)
+* [MDN:mouseenter](https://developer.mozilla.org/en-US/docs/Web/Events/mouseenter)
+* [MDN:mouseleave](mouseleave)
+* [Event reference](https://developer.mozilla.org/en-US/docs/Web/Events)
+* [Document.createEvent()](https://developer.mozilla.org/en-US/docs/Web/API/Document/createEvent)
 
 ## License
 
