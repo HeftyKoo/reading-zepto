@@ -4,6 +4,10 @@ Event 模块是 Zepto 必备的模块之一，由于对 Event Api 不太熟，Ev
 
 读Zepto源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
 
+## 源码版本
+
+本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
+
 ## 准备知识
 
 ### focus/blur 的事件模拟
@@ -511,12 +515,6 @@ element.removeEventListener(realEvent(handler.e), handler.proxy, eventCapture(ha
 
 
 ## 方法
-
-
-
-## 源码版本
-
-本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
 
 
