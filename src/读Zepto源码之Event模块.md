@@ -635,7 +635,117 @@ return compatible(event)
 
 ## 方法
 
+### .on()
 
+```javascript
+$.fn.on = function(event, selector, data, callback, one){
+  var autoRemove, delegator, $this = this
+  if (event && !isString(event)) {
+    $.each(event, function(type, fn){
+      $this.on(type, selector, data, fn, one)
+    })
+    return $this
+  }
+
+  if (!isString(selector) && !isFunction(callback) && callback !== false)
+    callback = data, data = selector, selector = undefined
+    if (callback === undefined || data === false)
+      callback = data, data = undefined
+
+      if (callback === false) callback = returnFalse
+
+      return $this.each(function(_, element){
+        if (one) autoRemove = function(e){
+          remove(element, e.type, callback)
+          return callback.apply(this, arguments)
+        }
+
+        if (selector) delegator = function(e){
+          var evt, match = $(e.target).closest(selector, element).get(0)
+          if (match && match !== element) {
+            evt = $.extend(createProxy(e), {currentTarget: match, liveFired: element})
+            return (autoRemove || callback).apply(match, [evt].concat(slice.call(arguments, 1)))
+          }
+        }
+
+        add(element, event, callback, data, selector, delegator || autoRemove)
+      })
+}
+```
+
+`on` 方法来用给元素绑定事件，最终调用的是 `add` 方法，前面的一大段逻辑主要是修正参数。
+
+```javascript
+var autoRemove, delegator, $this = this
+if (event && !isString(event)) {
+  $.each(event, function(type, fn){
+    $this.on(type, selector, data, fn, one)
+  })
+  return $this
+}
+```
+
+`autoRemove` 表示在执行完事件响应后，自动解绑的函数。
+
+`event` 可以为字符串或者对象，当为对象时，对象的属性为事件类型，属性值为句柄。
+
+这段是处理 `event` 为对象时的情况，遍历对象，得到事件类型和句柄，然后再次调用 `on` 方法，继续修正后续的参数。
+
+```javascript
+if (!isString(selector) && !isFunction(callback) && callback !== false)
+  callback = data, data = selector, selector = undefined
+if (callback === undefined || data === false)
+  callback = data, data = undefined
+
+if (callback === false) callback = returnFalse
+```
+
+先来分析第一个 `if` ，`selector` 不为 `string` ，`callback` 不为函数，并且 `callback` 不为 `false` 时的情况。
+
+这里可以确定 `selector` 并没有传递，因为 `selector` 不是必传的参数。
+
+因此这里将 `data` 赋给 `callback`，`selector`  赋给 `data` ，将 `selector` 设置为 `undefined` ，因为 `selector` 没有传递，因此相应参数的位置都前移了一位。
+
+再来看第二个 `if` ，如果 `callback`（ 原来的 `data` ） 为 `undefined` ， `data` 为 `false` 时，表示 `selector` 没有传递，并且 `data` 也没有传递，因此将 `data` 赋给 `callback` ，将 `data` 设置为 `undefined` ，即将参数再前移一位。
+
+第三个 `if` ，如果 `callback === false` ，用 `returnFalse` 函数代替，如果不用 `returnFalse` 代替，会报错。
+
+```javascript
+return $this.each(function(_, element){
+  add(element, event, callback, data, selector, delegator || autoRemove)
+})
+```
+
+可以看到，这里是遍历元素集合，为每个元素都调用 `add` 方法，绑定事件。
+
+```javascript
+if (one) autoRemove = function(e){
+  remove(element, e.type, callback)
+  return callback.apply(this, arguments)
+}
+```
+
+如果只调用一次，设置 `autoRemove` 为一个函数，这个函数在句柄执行前，调用 `remove` 方法，将绑定在元素上对应事件解绑。
+
+```javascript
+if (selector) delegator = function(e){
+  var evt, match = $(e.target).closest(selector, element).get(0)
+  if (match && match !== element) {
+    evt = $.extend(createProxy(e), {currentTarget: match, liveFired: element})
+    return (autoRemove || callback).apply(match, [evt].concat(slice.call(arguments, 1)))
+  }
+}
+```
+
+如果 `selector` 存在，表示需要做事件代理。
+
+调用 `closest` 方法，从事件的目标元素 `e.target` 开始向上查找，返回第一个匹配 `selector` 的元素。关于 `closest` 方法，见《[读Zepto源码之集合元素查找](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E9%9B%86%E5%90%88%E5%85%83%E7%B4%A0%E6%9F%A5%E6%89%BE.md#closest)》分析。
+
+如果 `match` 存在，并且 `match` 不为当前元素，则调用 `createProxy` 方法，为当前事件对象创建代理对象，再调用 `$.extend` 方法，为代理对象扩展 `currentTarget` 和 `liveFired` 属性，将代理元素和触发事件的元素保存到事件对象中。
+
+最后执行句柄函数，以代理元素 `match` 作为句柄的上下文，用代理后的 `event` 对象 `evt` 替换掉原句柄函数的第一个参数。
+
+将该函数赋给 `delegator` ，作为代理函数传递给 `add` 方法。
 
 ## 系列文章
 
