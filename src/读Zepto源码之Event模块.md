@@ -55,6 +55,14 @@ target.addEventListener('focusout', () => {console.log('focusout')})
 
 ## Event 模块的核心
 
+将 `Event` 模块简化后如下：
+
+```javascript
+;(function($){})(Zepto)
+```
+
+其实就是向闭包中传入 `Zepto` 对象，然后对 `Zepto` 对象做一些扩展。
+
 在 `Event` 模块中，主要做了如下几件事：
 
 * 提供简洁的API
@@ -64,7 +72,439 @@ target.addEventListener('focusout', () => {console.log('focusout')})
 
 ## 内部方法
 
+### zid
 
+```javascript
+var _zid = 1
+function zid(element) {
+  return element._zid || (element._zid = _zid++)
+}
+```
+
+获取参数 `element` 对象的 `_zid` 属性，如果属性不存在，则全局变量 `_zid` 增加 `1` ，作为 `element` 的 `_zid` 的属性值返回。这个方法用来标记已经绑定过事件的元素，方便查找。
+
+### parse
+
+```javascript
+function parse(event) {
+  var parts = ('' + event).split('.')
+  return {e: parts[0], ns: parts.slice(1).sort().join(' ')}
+}
+```
+
+在 `zepto` 中，支持事件的命名空间，可以用 `eventType.ns1.ns2...` 的形式来给事件添加一个或多个命名空间。
+
+`parse` 函数用来分解事件名和命名空间。
+
+`'' + event` 是将 `event` 变成字符串，再以 `.` 分割成数组。
+
+返回的对象中，`e` 为事件名， `ns` 为排序后，以空格相连的命名空间字符串，形如 `ns1 ns2 ns3 ...` 的形式。
+
+### matcherFor
+
+```javascript
+function matcherFor(ns) {
+  return new RegExp('(?:^| )' + ns.replace(' ', ' .* ?') + '(?: |$)')
+}
+```
+
+生成匹配命名空间的表达式，例如，传进来的参数 `ns` 为 `ns1 ns2 ns3` ，最终生成的正则为 `/(?:^| )ns1.* ?ns2.* ?ns3(?: |$)/`。至于有什么用，下面马上讲到。
+
+### findHandlers，查找缓存的句柄
+
+```javascript
+handlers = {}
+function findHandlers(element, event, fn, selector) {
+  event = parse(event)
+  if (event.ns) var matcher = matcherFor(event.ns)
+  return (handlers[zid(element)] || []).filter(function(handler) {
+    return handler
+      && (!event.e  || handler.e == event.e)
+      && (!event.ns || matcher.test(handler.ns))
+      && (!fn       || zid(handler.fn) === zid(fn))
+      && (!selector || handler.sel == selector)
+  })
+}
+```
+
+查找元素对应的事件句柄。
+
+```javascript
+event = parse(event)
+```
+
+调用 `parse` 函数，分隔出 `event` 参数的事件名和命名空间。
+
+```javascript
+if (event.ns) var matcher = matcherFor(event.ns)
+```
+
+如果命名空间存在，则生成匹配该命名空间的正则表达式 `matcher`。
+
+```javascript
+return (handlers[zid(element)] || []).filter(function(handler) {
+    ...
+  })
+```
+
+返回的其实是 `handlers[zid(element)]` 中符合条件的句柄函数。 `handlers` 是缓存的句柄容器，用 `element` 的 `_zid` 属性值作为 `key` 。
+
+ ```javascript
+return handler  // 条件1
+      && (!event.e  || handler.e == event.e) // 条件2
+      && (!event.ns || matcher.test(handler.ns)) // 条件3
+      && (!fn       || zid(handler.fn) === zid(fn)) // 条件4
+      && (!selector || handler.sel == selector) // 条件5
+ ```
+
+返回的句柄必须满足5个条件：
+
+1. 句柄必须存在
+2. 如果 `event.e` 存在，则句柄的事件名必须与 `event` 的事件名一致
+3. 如果命名空间存在，则句柄的命名空间必须要与事件的命名空间匹配（ `matcherFor` 的作用 ）
+4. 如果指定匹配的事件句柄为 `fn` ，则当前句柄 `handler` 的 `_zid` 必须与指定的句柄 `fn` 相一致
+5. 如果指定选择器 `selector` ，则当前句柄中的选择器必须与指定的选择器一致
+
+从上面的比较可以看到，缓存的句柄对象的形式如下：
+
+```javascript
+{
+  fn: '', // 函数
+  e: '', // 事件名
+  ns: '', // 命名空间
+  sel: '',  // 选择器
+  // 除此之外，其实还有
+  i: '', // 函数索引
+  del: '', // 委托函数
+  proxy: '', // 代理函数
+  // 后面这几个属性会讲到
+}
+```
+
+### realEvent，返回对应的冒泡事件
+
+```javascript
+focusinSupported = 'onfocusin' in window,
+focus = { focus: 'focusin', blur: 'focusout' },
+hover = { mouseenter: 'mouseover', mouseleave: 'mouseout' }
+function realEvent(type) {
+  return hover[type] || (focusinSupported && focus[type]) || type
+}
+```
+
+这个函数其实是将 `focus/blur` 转换成 `focusin/focusout` ，将 `mouseenter/mouseleave` 转换成 `mouseover/mouseout` 事件。
+
+由于 `focusin/focusout` 事件浏览器支持程度还不是很好，因此要对浏览器支持做一个检测，如果浏览器支持，则返回，否则，返回原事件名。
+
+### compatible，修正event对象
+
+```javascript
+returnTrue = function(){return true},
+returnFalse = function(){return false},
+eventMethods = {
+  preventDefault: 'isDefaultPrevented',
+  stopImmediatePropagation: 'isImmediatePropagationStopped',
+  stopPropagation: 'isPropagationStopped'
+}
+
+function compatible(event, source) {
+  if (source || !event.isDefaultPrevented) {
+    source || (source = event)
+
+    $.each(eventMethods, function(name, predicate) {
+      var sourceMethod = source[name]
+      event[name] = function(){
+        this[predicate] = returnTrue
+        return sourceMethod && sourceMethod.apply(source, arguments)
+      }
+      event[predicate] = returnFalse
+    })
+
+    try {
+      event.timeStamp || (event.timeStamp = Date.now())
+    } catch (ignored) { }
+
+    if (source.defaultPrevented !== undefined ? source.defaultPrevented :
+        'returnValue' in source ? source.returnValue === false :
+        source.getPreventDefault && source.getPreventDefault())
+      event.isDefaultPrevented = returnTrue
+      }
+  return event
+}
+```
+
+`compatible` 函数用来修正 `event` 对象的浏览器差异，向 `event` 对象中添加了 `isDefaultPrevented、isImmediatePropagationStopped、isPropagationStopped` 几个方法，对不支持 `timeStamp` 的浏览器，向 `event` 对象中添加 `timeStamp` 属性。
+
+```javascript
+if (source || !event.isDefaultPrevented) {
+  source || (source = event)
+
+  $.each(eventMethods, function(name, predicate) {
+    var sourceMethod = source[name]
+    event[name] = function(){
+      this[predicate] = returnTrue
+      return sourceMethod && sourceMethod.apply(source, arguments)
+    }
+    event[predicate] = returnFalse
+  })
+```
+
+判断条件是，原事件对象存在，或者事件 `event` 的 `isDefaultPrevented` 不存在时成立。
+
+如果 `source` 不存在，则将 `event` 赋值给 `source`， 作为原事件对象。
+
+遍历 `eventMethods` ，获得原事件对象的对应方法名 `sourceMethod`。
+
+```javascript
+event[name] = function(){
+  this[predicate] = returnTrue
+  return sourceMethod && sourceMethod.apply(source, arguments)
+}
+```
+
+改写 `event` 对象相应的方法，如果执行对应的方法时，先将事件中方法所对应的新方法赋值为 `returnTrue` 函数 ，例如执行 `preventDefault` 方法时， `isDefaultPrevented` 方法的返回值为 `true`。
+
+```javascript
+event[predicate] = returnFalse
+```
+
+这是将新添加的属性，初始化为 `returnFalse` 方法
+
+```javascript
+try {
+  event.timeStamp || (event.timeStamp = Date.now())
+} catch (ignored) { }
+```
+
+这段向不支持 `timeStamp` 属性的浏览器中添加 `timeStamp` 属性。
+
+```javascript
+if (source.defaultPrevented !== undefined ? source.defaultPrevented :
+    'returnValue' in source ? source.returnValue === false :
+    source.getPreventDefault && source.getPreventDefault())
+  event.isDefaultPrevented = returnTrue
+  }
+```
+
+这是对浏览器 `preventDefault` 不同实现的兼容。
+
+```javascript
+source.defaultPrevented !== undefined ? source.defaultPrevented : '三元表达式'
+```
+
+如果浏览器支持 `defaultPrevented`， 则返回 `defaultPrevented` 的值
+
+```javascript
+'returnValue' in source ? source.returnValue === false : '后一个判断'
+```
+
+`returnValue` 默认为 `true`，如果阻止了浏览器的默认行为， `returnValue` 会变为 `false` 。
+
+```javascript
+source.getPreventDefault && source.getPreventDefault()
+```
+
+如果浏览器支持 `getPreventDefault` 方法，则调用 `getPreventDefault()` 方法获取是否阻止浏览器的默认行为。
+
+判断为 `true` 的时候，将 `isDefaultPrevented` 设置为 `returnTrue` 方法。
+
+### createProxy，创建代理对象
+
+```javascript
+ignoreProperties = /^([A-Z]|returnValue$|layer[XY]$|webkitMovement[XY]$)/,
+function createProxy(event) {
+  var key, proxy = { originalEvent: event }
+  for (key in event)
+    if (!ignoreProperties.test(key) && event[key] !== undefined) proxy[key] = event[key]
+
+    return compatible(proxy, event)
+}
+```
+
+`zepto` 中，事件触发的时候，返回给我们的 `event` 都不是原生的 `event` 对象，都是代理对象，这个就是代理对象的创建方法。
+
+`ignoreProperties` 用来排除 `A-Z` 开头，即所有大写字母开头的属性，还有以`returnValue` 结尾，`layerX/layerY` ，`webkitMovementX/webkitMovementY` 结尾的非标准属性。
+
+```javascript
+for (key in event)
+  if (!ignoreProperties.test(key) && event[key] !== undefined) proxy[key] = event[key]
+```
+
+遍历原生事件对象，排除掉不需要的属性和值为 `undefined` 的属性，将属性和值复制到代理对象上。
+
+最终返回的是修正后的代理对象
+
+### eventCapture
+
+```javascript
+function eventCapture(handler, captureSetting) {
+  return handler.del &&
+    (!focusinSupported && (handler.e in focus)) ||
+    !!captureSetting
+}
+```
+
+返回 `true` 表示在捕获阶段执行事件句柄，否则在冒泡阶段执行。
+
+如果存在事件代理，并且事件为 `focus/blur` 事件，在浏览器不支持 `focusin/focusout` 事件时，设置为 `true` ， 在捕获阶段处理事件，间接达到冒泡的目的。
+
+否则作用自定义的 `captureSetting` 设置事件执行的时机。
+
+### add，Event 模块的核心方法
+
+```javascript
+function add(element, events, fn, data, selector, delegator, capture){
+  var id = zid(element), set = (handlers[id] || (handlers[id] = []))
+  events.split(/\s/).forEach(function(event){
+    if (event == 'ready') return $(document).ready(fn)
+    var handler   = parse(event)
+    handler.fn    = fn
+    handler.sel   = selector
+    // emulate mouseenter, mouseleave
+    if (handler.e in hover) fn = function(e){
+      var related = e.relatedTarget
+      if (!related || (related !== this && !$.contains(this, related)))
+        return handler.fn.apply(this, arguments)
+        }
+    handler.del   = delegator
+    var callback  = delegator || fn
+    handler.proxy = function(e){
+      e = compatible(e)
+      if (e.isImmediatePropagationStopped()) return
+      e.data = data
+      var result = callback.apply(element, e._args == undefined ? [e] : [e].concat(e._args))
+      if (result === false) e.preventDefault(), e.stopPropagation()
+      return result
+    }
+    handler.i = set.length
+    set.push(handler)
+    if ('addEventListener' in element)
+      element.addEventListener(realEvent(handler.e), handler.proxy, eventCapture(handler, capture))
+      })
+}
+```
+
+`add` 方法是向元素添加事件及事件响应，参数比较多，先来看看各参数的含义：
+
+```javascript
+element // 事件绑定的元素
+events // 需要绑定的事件列表
+fn // 事件执行时的句柄
+data // 事件执行时，传递给事件对象的数据
+selector // 事件绑定元素的选择器
+delegator // 事件委托函数 
+capture // 那个阶段执行事件句柄
+```
+
+```javascript
+var id = zid(element), set = (handlers[id] || (handlers[id] = []))
+```
+
+获取或设置 `id` ， `set` 为事件句柄容器。
+
+```javascript
+events.split(/\s/).forEach(function(event){})
+```
+
+对每个事件进行处理
+
+```javascript
+if (event == 'ready') return $(document).ready(fn)
+```
+
+如果为 `ready` 事件，则调用 `ready` 方法，中止后续的执行
+
+```javascript
+var handler   = parse(event)
+handler.fn    = fn
+handler.sel   = selector
+// emulate mouseenter, mouseleave
+if (handler.e in hover) fn = function(e){
+  var related = e.relatedTarget
+  if (!related || (related !== this && !$.contains(this, related)))
+    return handler.fn.apply(this, arguments)
+    }
+handler.del   = delegator
+var callback  = delegator || fn
+```
+
+这段代码是设置 `handler` 上的一些属性，缓存起来。
+
+这里主要看对 `mouseenter` 和 `mouseleave` 事件的模拟，具体的原理上面已经说过，只有在条件成立的时候才会执行事件句柄。
+
+```javascript
+handler.proxy = function(e){
+  e = compatible(e)
+  if (e.isImmediatePropagationStopped()) return
+  e.data = data
+  var result = callback.apply(element, e._args == undefined ? [e] : [e].concat(e._args))
+  if (result === false) e.preventDefault(), e.stopPropagation()
+  return result
+}
+```
+
+事件句柄的代理函数。
+
+`e` 为事件执行时的原生 `event` 对象，因此先调用 `compatible` 对 `e` 进行修正。
+
+调用 `isImmediatePropagationStopped` 方法，看是否已经执行过 `stopImmediatePropagation` 方法，如果已经执行，则中止后续程序的执行。
+
+再扩展 `e` 对象，将 `data` 存到 `e` 的 `data` 属性上。
+
+执行事件句柄，将 `e` 对象作为句柄的第一个参数。
+
+如果执行完毕后，显式返回 `false`，则阻止浏览器的默认行为和事件冒泡。
+
+```javascript
+set.push(handler)
+if ('addEventListener' in element)
+  element.addEventListener(realEvent(handler.e), handler.proxy, eventCapture(handler, capture))
+```
+
+将句柄存入句柄容器
+
+调用元素的 `addEventListener` 方法，添加事件，事件的回调函数用的是句柄的代理函数，`eventCapture(handler, capture)` 来用指定是否在捕获阶段执行。
+
+### remove，删除事件
+
+```javascript
+function remove(element, events, fn, selector, capture){
+  var id = zid(element)
+  ;(events || '').split(/\s/).forEach(function(event){
+    findHandlers(element, event, fn, selector).forEach(function(handler){
+      delete handlers[id][handler.i]
+      if ('removeEventListener' in element)
+        element.removeEventListener(realEvent(handler.e), handler.proxy, eventCapture(handler, capture))
+        })
+  })
+}
+```
+
+首先获取指定元素的 `_zid`
+
+```javascript
+;(events || '').split(/\s/).forEach(function(event){})
+```
+
+遍历需要删除的 `events` 
+
+```javascript
+findHandlers(element, event, fn, selector).forEach(function(handler){})
+```
+
+调用 `findHandlers` 方法，查找 `event` 下需要删除的事件句柄
+
+```javascript
+delete handlers[id][handler.i]
+```
+
+删除句柄容器中对应的事件，在 `add` 函数中的句柄对象中的 `i` 属性就用在这里了，方便查找需要删除的句柄。
+
+```javascript
+element.removeEventListener(realEvent(handler.e), handler.proxy, eventCapture(handler, capture))
+```
+
+调用 `removeEventListener` 方法，删除对应的事件。
 
 ## 工具函数
 
@@ -105,6 +545,7 @@ target.addEventListener('focusout', () => {console.log('focusout')})
 * [MDN:MouseEvent.relatedTarget](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/relatedTarget)
 * [MDN:Event reference](https://developer.mozilla.org/en-US/docs/Web/Events)
 * [MDN:Document.createEvent()](https://developer.mozilla.org/en-US/docs/Web/API/Document/createEvent)
+* [MDN:event.stopImmediatePropagation](https://developer.mozilla.org/zh-CN/docs/Web/API/Event/stopImmediatePropagation)
 
 ## License
 
