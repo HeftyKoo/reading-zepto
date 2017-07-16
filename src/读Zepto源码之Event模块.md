@@ -512,7 +512,126 @@ element.removeEventListener(realEvent(handler.e), handler.proxy, eventCapture(ha
 
 ## 工具函数
 
+### $.event
 
+```javascript
+$.event = { add: add, remove: remove }
+```
+
+将 `add` 方法和 `remove` 方法暴露出去，应该是方便第三方插件做扩展
+
+### $.proxy
+
+```javascript
+$.proxy = function(fn, context) {
+  var args = (2 in arguments) && slice.call(arguments, 2)
+  if (isFunction(fn)) {
+    var proxyFn = function(){ return fn.apply(context, args ? args.concat(slice.call(arguments)) : arguments) }
+    proxyFn._zid = zid(fn)
+    return proxyFn
+  } else if (isString(context)) {
+    if (args) {
+      args.unshift(fn[context], fn)
+      return $.proxy.apply(null, args)
+    } else {
+      return $.proxy(fn[context], fn)
+    }
+  } else {
+    throw new TypeError("expected function")
+  }
+}
+```
+
+代理函数，作用有点像 JS 中的 `bind` 方法，返回的是一个代理后改变执行上下文的函数。
+
+```javascript
+var args = (2 in arguments) && slice.call(arguments, 2)
+```
+
+如果提供超过3个参数，则去除前两个参数，将后面的参数作为执行函数 `fn` 的参数。
+
+```javascript
+if (isFunction(fn)) {
+  var proxyFn = function(){ return fn.apply(context, args ? args.concat(slice.call(arguments)) : arguments) }
+  proxyFn._zid = zid(fn)
+  return proxyFn
+}
+```
+
+`proxy` 的执行函数有两种传递方式，一是在第一个参数直接传入，二是第一个参数为上下文对象，执行函数也在上下文对象中一起传入。
+
+这里判断 `fn` 是否为函数，即第一种传参方式，调用 `fn` 函数的 `apply` 方法，将上下文对象 `context` 作为 `apply` 的第一个参数，如果 `args` 存在，则与 `fn` 的参数合并。
+
+给代理后的函数加上 `_zid` 属性，方便函数的查找。
+
+```javascript
+else if (isString(context)) {
+  if (args) {
+    args.unshift(fn[context], fn)
+    return $.proxy.apply(null, args)
+  } else {
+    return $.proxy(fn[context], fn)
+  }
+```
+
+如果函数已经包含在上下文对象中，即第一个参数 `fn` 为对象，第二个参数 `context` 为字符串，用来指定执行函数的在上下文对象中的属性名。
+
+```javascript
+if (args) {
+  args.unshift(fn[context], fn)
+  return $.proxy.apply(null, args)
+}
+```
+
+如果参数存在时，将 `fn[context]` ，也即执行函数和 `fn` ，也即上下文对象放入 `args` 数组的开头，这样就将参数修正成跟第一种传参方式一样，再调用 `$.proxy` 函数。这里调用 `apply` 方法，是因为不知道参数有多少个，调用 `apply` 可以以数组的形式传入。
+
+如果 `args` 不存在时，确定的参数项只有两个，因此可以直接调用 `$.proxy` 方法。
+
+### $.Event
+
+```javascript
+specialEvents={},
+specialEvents.click = specialEvents.mousedown = specialEvents.mouseup = specialEvents.mousemove = 'MouseEvents'
+
+$.Event = function(type, props) {
+  if (!isString(type)) props = type, type = props.type
+  var event = document.createEvent(specialEvents[type] || 'Events'), bubbles = true
+  if (props) for (var name in props) (name == 'bubbles') ? (bubbles = !!props[name]) : (event[name] = props[name])
+  event.initEvent(type, bubbles, true)
+  return compatible(event)
+}
+```
+
+`specialEvents` 是将鼠标事件修正为 `MouseEvents` ，这应该是处理浏览器的兼容问题，可能有些浏览器中，这些事件的事件类型并不是 `MouseEvents` 。
+
+`$.Event` 方法用来手动创建特定类型的事件。
+
+参数 `type` 可以为字符串，也可以为 `event` 对象。`props` 为扩展 `event` 对象的对象。
+
+```javascript
+if (!isString(type)) props = type, type = props.type
+```
+
+如果不是字符串，也即是 `event` 对象时，将 `type` 赋给 `props` ，`type` 为当前 `event` 对象中的 `type` 属性值。
+
+```javascript
+var event = document.createEvent(specialEvents[type] || 'Events'), bubbles = true
+```
+
+调用 `createEvent` 方法，创建对应类型的 `event` 事件，并将事件冒泡默认设置为 `true`
+
+```javascript
+if (props) for (var name in props) (name == 'bubbles') ? (bubbles = !!props[name]) : (event[name] = props[name])
+```
+
+遍历 `props` 属性，如果有指定 `bubbles` ，则采用指定的冒泡行为，其他属性复制到 `event` 对象上，实现对 `event` 对象的扩展。
+
+```javascript
+event.initEvent(type, bubbles, true)
+return compatible(event)
+```
+
+初始化新创建的事件，并将修正后的事件对象返回。
 
 ## 方法
 
