@@ -237,7 +237,7 @@ function compatible(event, source) {
 }
 ```
 
-`compatible` 函数用来修正 `event` 对象的浏览器差异，向 `event` 对象中添加了 `isDefaultPrevented、isImmediatePropagationStopped、isPropagationStopped` 几个方法，对不支持 `timeStamp` 的浏览器，向 `event` 对象中添加 `timeStamp` 属性。
+`compatible` 函数用来修正 `event` 对象的浏览器差异，向 `event` 对象中添加了 `isDefaultPrevented`、`isImmediatePropagationStopped`、`isPropagationStopped` 几个方法，对不支持 `timeStamp` 的浏览器，向 `event` 对象中添加 `timeStamp` 属性。
 
 ```javascript
 if (source || !event.isDefaultPrevented) {
@@ -747,6 +747,211 @@ if (selector) delegator = function(e){
 
 将该函数赋给 `delegator` ，作为代理函数传递给 `add` 方法。
 
+### .off()
+
+```javascript
+$.fn.off = function(event, selector, callback){
+  var $this = this
+  if (event && !isString(event)) {
+    $.each(event, function(type, fn){
+      $this.off(type, selector, fn)
+    })
+    return $this
+  }
+
+  if (!isString(selector) && !isFunction(callback) && callback !== false)
+    callback = selector, selector = undefined
+
+    if (callback === false) callback = returnFalse
+
+    return $this.each(function(){
+      remove(this, event, callback, selector)
+    })
+}
+```
+
+解绑事件
+
+```javascript
+if (event && !isString(event)) {
+  $.each(event, function(type, fn){
+    $this.off(type, selector, fn)
+  })
+  return $this
+}
+```
+
+这段逻辑与 `on` 方法中的相似，修正参数，不再细说。
+
+```javascript
+if (!isString(selector) && !isFunction(callback) && callback !== false)
+  callback = selector, selector = undefined
+if (callback === false) callback = returnFalse
+```
+
+第一个 `if` 是处理 `selector` 参数没有传递的情况的， `selector` 位置传递的其实是 `callback` 。
+
+第二个 `if` 是判断如果 `callback` 为 `false` ，将 `callback` 赋值为 `returnFalse` 函数。
+
+```javascript
+return $this.each(function(){
+  remove(this, event, callback, selector)
+})
+```
+
+最后遍历所有元素，调用 `remove` 函数，为每个元素解绑事件。
+
+### .bind()
+
+```javascript
+$.fn.bind = function(event, data, callback){
+  return this.on(event, data, callback)
+}
+```
+
+`bind` 方法内部调用的其实是 `on` 方法。
+
+### .unbind()
+
+```javascript
+$.fn.unbind = function(event, callback){
+  return this.off(event, callback)
+}
+```
+
+`unbind` 方法内部调用的是 `off` 方法。
+
+### .one()
+
+```javascript
+$.fn.one = function(event, selector, data, callback){
+  return this.on(event, selector, data, callback, 1)
+}
+```
+
+`one` 方法内部调用的也是 `on` 方法，只不过默认传递了 `one` 参数为 `1` ，表示绑定的事件只执行一下。
+
+### .delegate()
+
+```javascript
+$.fn.delegate = function(selector, event, callback){
+  return this.on(event, selector, callback)
+}
+```
+
+事件委托，也是调用 `on` 方法，只是 `selector` 一定要传递。
+
+### .undelegate()
+
+```javascript
+$.fn.undelegate = function(selector, event, callback){
+  return this.off(event, selector, callback)
+}
+```
+
+取消事件委托，内部调用的是 `off` 方法，`selector` 必须要传递。
+
+### .live()
+
+```javascript
+$.fn.live = function(event, callback){
+  $(document.body).delegate(this.selector, event, callback)
+  return this
+}
+```
+
+动态创建的节点也可以响应事件。其实事件绑定在 `body` 上，然后委托到当前节点上。内部调用的是 `delegate` 方法。
+
+### .die()
+
+```javascript
+$.fn.die = function(event, callback){
+  $(document.body).undelegate(this.selector, event, callback)
+  return this
+}
+```
+
+将由 `live` 绑定在 `body` 上的事件销毁，内部调用的是 `undelegate` 方法。
+
+### .triggerHandler()
+
+```javascript
+$.fn.triggerHandler = function(event, args){
+  var e, result
+  this.each(function(i, element){
+    e = createProxy(isString(event) ? $.Event(event) : event)
+    e._args = args
+    e.target = element
+    $.each(findHandlers(element, event.type || event), function(i, handler){
+      result = handler.proxy(e)
+      if (e.isImmediatePropagationStopped()) return false
+        })
+  })
+  return result
+}
+```
+
+直接触发事件回调函数。
+
+参数 `event` 可以为事件类型字符串，也可以为 `event` 对象。
+
+ ```javascript
+e = createProxy(isString(event) ? $.Event(event) : event)
+ ```
+
+如果 `event` 为字符串时，则调用 `$.Event` 工具函数来初始化一个事件对象，再调用 `createProxy` 来创建一个 `event` 代理对象。
+
+```javascript
+$.each(findHandlers(element, event.type || event), function(i, handler){
+  result = handler.proxy(e)
+  if (e.isImmediatePropagationStopped()) return false
+    })
+```
+
+调用 `findHandlers` 方法来找出事件的所有句柄，调用 `proxy` 方法，即真正绑定到事件上的回调函数（参见 `add` 的解释），拿到方法返回的结果 `result` ，并查看 `isImmediatePropagationStopped` 返回的结果是否为 `true` ，如果是，立刻中止后续执行。
+
+如果返回的结果 `result` 为 `false` ，也立刻中止后续执行。
+
+由于 `triggerHandler` 直接触发回调函数，所以事件不会冒泡。
+
+### .trigger()
+
+```javascript
+$.fn.trigger = function(event, args){
+  event = (isString(event) || $.isPlainObject(event)) ? $.Event(event) : compatible(event)
+  event._args = args
+  return this.each(function(){
+    // handle focus(), blur() by calling them directly
+    if (event.type in focus && typeof this[event.type] == "function") this[event.type]()
+    // items in the collection might not be DOM elements
+    else if ('dispatchEvent' in this) this.dispatchEvent(event)
+    else $(this).triggerHandler(event, args)
+      })
+}
+```
+
+手动触发事件。
+
+```javascript
+event = (isString(event) || $.isPlainObject(event)) ? $.Event(event) : compatible(event)
+```
+
+`event` 可以传递事件类型，对象和 `event` 对象。
+
+如果传递的是字符串或者纯粹对象，则先调用 `$.Event` 方法来初始化事件，否则调用 `compatible` 方法来修正 `event` 对象，由于 `$.Event` 方法在内部其实已经调用过 `compatible` 方法修正 `event` 对象了的，所以外部不需要再调用一次。
+
+```javascript
+if (event.type in focus && typeof this[event.type] == "function") this[event.type]()
+```
+
+如果是 `focus/blur` 方法，则直接调用 `this.focus()`  或 `this.blur()` 方法，这两个方法是浏览器原生支持的。
+
+如果 `this` 为 `DOM` 元素，即存在 `dispatchEvent` 方法，则用 `dispatchEvent` 来触发事件，关于 `dispatchEvent` ，可以参考 [MDN: EventTarget.dispatchEvent()](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent)。
+
+否则，直接调用 `triggerHandler` 方法来触发事件的回调函数。
+
+由于 `trigger` 是通过触发事件来执行事件句柄的，因此事件会冒泡。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
@@ -772,6 +977,7 @@ if (selector) delegator = function(e){
 * [MDN:MouseEvent.relatedTarget](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/relatedTarget)
 * [MDN:Event reference](https://developer.mozilla.org/en-US/docs/Web/Events)
 * [MDN:Document.createEvent()](https://developer.mozilla.org/en-US/docs/Web/API/Document/createEvent)
+*  [MDN:EventTarget.dispatchEvent()](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent)
 * [MDN:event.stopImmediatePropagation](https://developer.mozilla.org/zh-CN/docs/Web/API/Event/stopImmediatePropagation)
 
 ## License
