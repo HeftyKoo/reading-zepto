@@ -6,6 +6,40 @@ Callbacks 模块并不是必备的模块，其作用是管理回调函数，为 
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## 整体结构
+
+将 Callbacks 模块的代码精简后，得到的结构如下：
+
+```javascript
+;(function($){
+  $.Callbacks = function(options) {
+    ...
+    Callbacks = {
+      ...
+    }
+    return Callbacks
+  }
+})(Zepto)
+```
+
+其实就是向 `zepto` 对象上，添加了一个 `Callbacks` 函数，可以将这个函数看成构造函数，调用这个函数返回的是一个对象，对象内部包含了一系列的方法。
+
+`options` 参数为一个对象，在源码的内部，作者已经注释了各个键值的含义。
+
+```javascript
+// Option flags:
+  //   - once: Callbacks fired at most one time.
+  //   - memory: Remember the most recent context and arguments
+  //   - stopOnFalse: Cease iterating over callback list
+  //   - unique: Permit adding at most one instance of the same callback
+once: 回调至多只能触发一次
+memory: 记下最近一次触发的上下文及参数列表，再添加新回调的时候都立刻用这个上下文及参数立即执行
+stopOnFalse： 如果队列中有回调返回 `false`，立即中止后续回调的执行
+unique: 同一个回调只能添加一次
+```
+
+
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
