@@ -22,7 +22,7 @@ Callbacks 模块并不是必备的模块，其作用是管理回调函数，为 
 })(Zepto)
 ```
 
-其实就是向 `zepto` 对象上，添加了一个 `Callbacks` 函数，可以将这个函数看成构造函数，调用这个函数返回的是一个对象，对象内部包含了一系列的方法。
+其实就是向 `zepto` 对象上，添加了一个 `Callbacks` 函数，这个是一个工厂函数，调用这个函数返回的是一个对象，对象内部包含了一系列的方法。
 
 `options` 参数为一个对象，在源码的内部，作者已经注释了各个键值的含义。
 
@@ -38,7 +38,29 @@ stopOnFalse： 如果队列中有回调返回 `false`，立即中止后续回调
 unique: 同一个回调只能添加一次
 ```
 
+## 全局参数
 
+```javascript
+options = $.extend({}, options)
+
+var memory, // Last fire value (for non-forgettable lists)
+    fired,  // Flag to know if list was already fired
+    firing, // Flag to know if list is currently firing
+    firingStart, // First callback to fire (used internally by add and fireWith)
+    firingLength, // End of the loop when firing
+    firingIndex, // Index of currently firing callback (modified by remove if needed)
+    list = [], // Actual callback list
+    stack = !options.once && [], // Stack of fire calls for repeatable lists
+```
+
+* `options` : 构造函数的配置，默认为空对象
+* `list` ： 回调函数列表
+* `stack` ： 
+* `memory` : 记忆模式，会记住上一次触发的上下文及参数
+* `fired` ： 回调函数列表已经触发过
+* `firing` :  回调函数列表正在触发
+*  `firingStart` :  回调任务的开始位置
+* `firingIndex` : 当前回调任务的索引
 
 ## 系列文章
 
@@ -59,6 +81,7 @@ unique: 同一个回调只能添加一次
 ## 参考
 
 * [Zepto源码分析-callbacks模块](http://www.cnblogs.com/mominger/p/4369469.html)
+* [读jQuery之十九（多用途回调函数列表对象）](http://www.cnblogs.com/snandy/archive/2012/11/15/2770237.html)
 
 ## License
 
