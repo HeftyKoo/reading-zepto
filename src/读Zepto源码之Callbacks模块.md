@@ -55,12 +55,140 @@ var memory, // Last fire value (for non-forgettable lists)
 
 * `options` : 构造函数的配置，默认为空对象
 * `list` ： 回调函数列表
-* `stack` ： 
+* `stack` ： 列表可以重复触发时，用来缓存触发过程中未执行的任务参数，如果列表只能触发一次，`stack` 永远为 `false`
 * `memory` : 记忆模式，会记住上一次触发的上下文及参数
 * `fired` ： 回调函数列表已经触发过
 * `firing` :  回调函数列表正在触发
-*  `firingStart` :  回调任务的开始位置
+* `firingStart` :  回调任务的开始位置
 * `firingIndex` : 当前回调任务的索引
+* `firingLength`：回调任务的长度
+
+## 基础用法
+
+我用 `jQuery` 和 `Zepto` 的时间比较短，之前也没有直接用过 `Callbacks` 模块，单纯看代码可能不易理解它是怎样工作的，在分析之前，先看一下简单的 `API` 调用，可能会有助于理解。
+
+```javascript
+var callbacks = $.Callbacks({memory: true})
+var a = function(a) {
+  console.log('a ' + a)
+}
+var b = function(b) {
+  console.log('b ' + b)
+}
+var c = function(c) {
+  console.log('c ' + c)
+}
+callbacks.add(a).add(b).add(c)  // 向队列 list 中添加了三个回调
+callbacks.remove(c) // 删除 c
+callbacks.fire('fire') 
+// 到这步输出了 `a fire` `b fire` 没有输出 `c fire`
+callbacks.lock()
+callbacks.fire('fire after lock')  // 到这步没有任何输出
+// 继续向队列添加回调，注意 `Callbacks` 的参数为 `memory: true`
+callbacks.add(function(d) {  
+  console.log('after lock')
+})
+// 输出 `after lock`
+callbacks.disable()
+callbacks.add(function(e) {
+  console.log('after disable')
+}) 
+// 没有任何输出
+```
+
+上面的例子只是简单的调用，也有了注释，下面开始分析 `API`
+
+## 内部方法
+
+### fire
+
+```javascript
+fire = function(data) {
+  memory = options.memory && data
+  fired = true
+  firingIndex = firingStart || 0
+  firingStart = 0
+  firingLength = list.length
+  firing = true
+  for ( ; list && firingIndex < firingLength ; ++firingIndex ) {
+    if (list[firingIndex].apply(data[0], data[1]) === false && options.stopOnFalse) {
+      memory = false
+      break
+    }
+  }
+  firing = false
+  if (list) {
+    if (stack) stack.length && fire(stack.shift())
+    else if (memory) list.length = 0
+    else Callbacks.disable()
+      }
+}
+```
+
+`Callbacks` 模块只有一个内部方法 `fire` ，用来触发 `list` 中的回调执行，这个方法是 `Callbacks` 模块的核心。
+
+#### 变量初始化
+
+```javascript
+memory = options.memory && data
+fired = true
+firingIndex = firingStart || 0
+firingStart = 0
+firingLength = list.length
+firing = true
+```
+
+`fire` 只接收一个参数 `data` ，这个内部方法 `fire` 跟我们调用 `API` 所接收的参数不太一样，这个 `data` 是一个数组，数组里面只有两项，第一项是上下文对象，第二项是回调函数的参数数组。
+
+如果 `options.memory` 为 `true` ，则将 `data`，也即上下文对象和参数保存下来。
+
+ 将 `list` 是否已经触发过的状态 `fired` 设置为 `true`。
+
+将当前回调任务的索引值 `firingIndex` 指向回调任务的开始位置 `firingStart` 或者回调列表的开始位置。
+
+将回调列表的开始位置 `firingStart` 设置为回调列表的开始位置。
+
+将回调任务的长度 `firingLength` 设置为回调列表的长度。
+
+将回调的开始状态 `firing` 设置为 `true`
+
+#### 执行回调
+
+```javascript
+for ( ; list && firingIndex < firingLength ; ++firingIndex ) {
+  if (list[firingIndex].apply(data[0], data[1]) === false && options.stopOnFalse) {
+    memory = false
+    break
+  }
+}
+firing = false
+```
+
+ 执行回调的整体逻辑是遍历回调列表，逐个执行回调。
+
+循环的条件是，列表存在，并且当前回调任务的索引值 `firingIndex` 要比回调任务的长度要小，这个很容易理解，当前的索引值都超出了任务的长度，就找不到任务执行了。
+
+`list[firingIndex].apply(data[0], data[1])` 就是从回调列表中找到对应的任务，绑定上下文对象，和传入对应的参数，执行任务。
+
+如果回调执行后显式返回 `false`， 并且 `options.stopOnFalse` 设置为 `true` ，则中止后续任务的执行，并且清空 `memory` 的缓存。
+
+回调任务执行完毕后，将 `firing` 设置为 `false`，表示当前没有正在执行的任务。
+
+#### 检测未执行的回调及清理工作
+
+```javascript
+if (list) {
+  if (stack) stack.length && fire(stack.shift())
+  else if (memory) list.length = 0
+  else Callbacks.disable()
+}
+```
+
+列表任务执行完毕后，先检查 `stack` 中是否有没有执行的任务，如果有，则将任务参数取出，调用 `fire` 函数执行。反而会看到，`stack` 储存的任务是 `push` 进去的，用 `shift` 取出，表明任务执行的顺序是先进先出。
+
+`memory` 存在，则清空回调列表，用 `list.length = 0` 是清空列表的一个方法。在全局参数中，可以看到， `stack` 为 `false` ，只有一种情况，就是 `options.once` 为 `true` 的时候，表示任务只能执行一次，所以要将列表清空。而 `memory` 为 `true` ，表示后面添加的任务还可以执行，所以还必须保持 `list` 容器的存在，以便后续任务的添加和执行。
+
+其他情况直接调用 `Callbacks.disable()` 方法，禁用所有回调任务的添加和执行。
 
 ## 系列文章
 
