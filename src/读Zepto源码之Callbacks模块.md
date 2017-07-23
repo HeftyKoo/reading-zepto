@@ -38,7 +38,7 @@ stopOnFalse： 如果队列中有回调返回 `false`，立即中止后续回调
 unique: 同一个回调只能添加一次
 ```
 
-## 全局参数
+## 全局变量
 
 ```javascript
 options = $.extend({}, options)
