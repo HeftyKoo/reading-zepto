@@ -2,6 +2,8 @@
 
 Callbacks 模块并不是必备的模块，其作用是管理回调函数，为 Defferred 模块提供支持，Defferred 模块又为 Ajax 模块的 `promise` 风格提供支持，接下来很快就会分析到 Ajax模块，在此之前，先看 Callbacks 模块和 Defferred 模块的实现。
 
+读 Zepto 源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
+
 ## 源码版本
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
