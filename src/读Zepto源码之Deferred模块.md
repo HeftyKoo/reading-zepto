@@ -8,6 +8,19 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## Promise/A+ 规范
+
+规范的具体内容可以参与《[Promises/A+](https://promisesaplus.com/)》 和对应的中文翻译 《[Promise/A+规范](https://segmentfault.com/a/1190000002452115)》，这里只简单总结一下。
+
+`promise` 是一个包含兼容 `promise` 规范的函数或对象，`promise` 包含三种状态 `pending` 进行中、`fulfilled` 已完成， `rejected` 被拒绝，并且必须处于其中一种状态。
+
+`pending` 状态可以转换成 `fulfilled` 状态或者 `rejected` 状态，但是 `fulfilled` 状态和 `rejected` 状态不能再转换成其他状态。
+
+`promise` 必须包含 `then` 方法，`then` 方法可以接收两个参数，参数类型都为函数，分别为状态变为 `fulfilled` 后调用的 `onFulfilled` 函数和 `rejected` 后调用的 `onRejected` 函数。
+
+大致了解 `Promise/A+` 规范后，对后面源码的阅读会有帮助。
+
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
@@ -28,6 +41,8 @@
 ## 参考
 
 * [Zepto源码分析-deferred模块](http://www.cnblogs.com/mominger/p/4411632.html)
+* [Promises/A+](https://promisesaplus.com/)
+* [Promise/A+规范](https://segmentfault.com/a/1190000002452115)
 
 ## License
 
