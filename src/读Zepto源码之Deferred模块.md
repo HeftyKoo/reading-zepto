@@ -20,6 +20,21 @@
 
 大致了解 `Promise/A+` 规范后，对后面源码的阅读会有帮助。
 
+## Deferred 模块的整体结构
+
+```javascript
+;(function($){
+  function Deferred(func) {
+    deferred = {}
+    if (func) func.call(deferred, deferred)
+    return deferred
+  }
+  return $.Deferred = Deferred
+})(Zepto)
+```
+
+从上面的精简的结构可以看出，`Deferred` 是一个函数，函数的返回值是一个符合 `Promise/A+` 规范的对象，如果 `Deferred` 有传递函数作为参数，则以 `deferred` 作为上下文，以 `deferred` 作为参数执行该函数。
+
 
 ## 系列文章
 
