@@ -35,6 +35,107 @@
 
 从上面的精简的结构可以看出，`Deferred` 是一个函数，函数的返回值是一个符合 `Promise/A+` 规范的对象，如果 `Deferred` 有传递函数作为参数，则以 `deferred` 作为上下文，以 `deferred` 作为参数执行该函数。
 
+## done、fail、progress、resolve/resolveWith、reject/rejectWith、notify/notifyWith 方法的生成
+
+```javascript
+var tuples = [
+  // action, add listener, listener list, final state
+  [ "resolve", "done", $.Callbacks({once:1, memory:1}), "resolved" ],
+  [ "reject", "fail", $.Callbacks({once:1, memory:1}), "rejected" ],
+  [ "notify", "progress", $.Callbacks({memory:1}) ]
+],
+    state = "pending",
+    promise = {
+      ...
+    }
+    deferred = {}
+$.each(tuples, function(i, tuple){
+  var list = tuple[2],
+      stateString = tuple[3]
+
+  promise[tuple[1]] = list.add
+
+  if (stateString) {
+    list.add(function(){
+      state = stateString
+    }, tuples[i^1][2].disable, tuples[2][2].lock)
+  }
+
+  deferred[tuple[0]] = function(){
+    deferred[tuple[0] + "With"](this === deferred ? promise : this, arguments)
+    return this
+  }
+  deferred[tuple[0] + "With"] = list.fireWith
+})
+```
+
+### 变量解释
+
+* tuples: 用来储存状态切换的方法名，对应状态的执行方法，回调关系列表和最终的状态描述。
+* state: 状态描述
+* promise：`promise` 包含执行方法 `always` 、`then` 、`done`、 `fail` 、`progress` 和辅助方法 `state` 、 `promise` 等
+* deferred:  `deferred` 除了继承 `promise` 的方法外，还增加了切换方法， `resolve` 、`resoveWith` 、`reject` 、 `rejectWith` 、`notify` 、 `notifyWith` 。
+  ​
+
+### done、fail和progress的生成
+
+```javascript
+$.each(tuples, function(i, tuple){
+  ...
+})
+```
+
+方法的生成，通过遍历 `tuples` 实现
+
+```javascript
+var list = tuple[2],
+	stateString = tuple[3]
+
+promise[tuple[1]] = list.add
+```
+
+`list` 是工厂方法 `$.Callbacks` 生成的管理回调函数的一系列方法。具体参见上一篇文章《[读Zepto源码之Callbacks模块](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8BCallbacks%E6%A8%A1%E5%9D%97.md)》。注意，`tuples` 的所有项中的 `$Callbacks` 都配置了 `memory:1` ，即开启记忆模式，增加的方法都会立即触发。包含 `resove` 和 `reject` 的项都传递了 `once:1` ，即回调列表只能触发一次。
+
+`stateString` 是状态描述，只有包含了 `resolve` 和 `reject` 的数组项才具有。
+
+`index` 为 `1` 的项，取出来的分别为 `done` 、 `fail` 和 `progress` ，所以 `promise` 上的 `done`、 `fail` 和 `progress` 方法，调用的是 `Callbacks` 中的 `add` 方法，实质是往各自的回调列表中添加回调函数。
+
+### 状态切换
+
+```javascript
+if (stateString) {
+  list.add(function(){
+    state = stateString
+  }, tuples[i^1][2].disable, tuples[2][2].lock)
+}
+```
+
+如果 `stateString` 存在，即包含 `resolve` 和 `reject` 的数组项，则往对应的回调列表中添加切换 `state` 状态的方法，将 `state` 更改为对应方法触发后的状态。
+
+同时，将状态锁定，即状态变为 `resolved` 或 `rejected` 状态后，不能再更改为其他状态。这里用来按位异或运算符 `^` 来实现。当 `i` 为 `0` ，即状态变为 `resolved` 时， `i^1` 为 `1` 。`tuples[i^1][2].disable` 将 `rejected` 的回调列表禁用，当 `i` 为 `1` 时， `i^1` 为 `0` ，将 `resolved` 的回调列表禁用。即实现了成功和失败的状态互斥，做得状态锁定，不能再更改。
+
+在状态变更后，同时将 `tuples[2]` 的回调列表锁定，要注意 `disable` 和 `lock` 的区别，具体见《[读Zepto源码之Callbacks模块](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8BCallbacks%E6%A8%A1%E5%9D%97.md#lock-和-disable-的区别)》，由于这里用了记忆模式，所以还可以往回调列表中添加回调方法，并且回调方法会立即触发。
+
+### resolve/resolveWith、reject/rejectWith、notify/notifyWith 方法的生成
+
+```javascript
+deferred[tuple[0] + "With"] = list.fireWith
+
+deferred[tuple[0]] = function(){
+  deferred[tuple[0] + "With"](this === deferred ? promise : this, arguments)
+  return this
+}
+```
+
+这几个方法，存入在 `deferred` 对象中，并没有存入 `promise` 对象。
+
+`resolveWith` 、 `rejectWith` 和 `notifyWith` 方法，其实等价于 `Callback` 的 `fireWith` 方法，`fireWith` 方法的第一个参数为上下文对象。
+
+从源码中可以看到 `resolve` 、`reject` 和 `notify` 方法，调用的是对应的 `With` 后缀方法，如果当前上下文为 `deferred` 对象，则传入 `promise` 对象作为上下文。
+
+
+
+
 
 ## 系列文章
 
@@ -58,6 +159,7 @@
 * [Zepto源码分析-deferred模块](http://www.cnblogs.com/mominger/p/4411632.html)
 * [Promises/A+](https://promisesaplus.com/)
 * [Promise/A+规范](https://segmentfault.com/a/1190000002452115)
+* [jQuery的deferred对象详解](http://www.ruanyifeng.com/blog/2011/08/a_detailed_explanation_of_jquery_deferred_object.html)
 
 ## License
 
