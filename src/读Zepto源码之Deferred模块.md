@@ -133,6 +133,148 @@ deferred[tuple[0]] = function(){
 
 从源码中可以看到 `resolve` 、`reject` 和 `notify` 方法，调用的是对应的 `With` 后缀方法，如果当前上下文为 `deferred` 对象，则传入 `promise` 对象作为上下文。
 
+## promise 对象
+
+### .state()
+
+```javascript
+state: function() {
+  return state
+},
+```
+
+`state` 方法的作用是返回当前的状态。
+
+### .always()
+
+```javascript
+always: function() {
+  deferred.done(arguments).fail(arguments)
+  return this
+},
+```
+
+`always` 是一种省事的写法，即无论成功还是失败，都会执行回调。调用的是 `deferred` 上的 `done` 和 `fail` 方法。或许你会有疑惑，`done` 和 `fail` 方法，上面的分析中，明明是 `promise` 的方法，为什么 `deferred` 对象上也有这两个方法呢，这个下面会讲到。
+
+### .promise()
+
+```javascript
+promise: function(obj) {
+  return obj != null ? $.extend( obj, promise ) : promise
+}
+```
+
+返回 `promise` 对象，如果 `obj` 有传递，则将 `promise` 上的方法扩展到 `obj` 上。
+
+### .then()
+
+```javascript
+then: function(/* fnDone [, fnFailed [, fnProgress]] */) {
+  var fns = arguments
+  return Deferred(function(defer){
+    $.each(tuples, function(i, tuple){
+      var fn = $.isFunction(fns[i]) && fns[i]
+      deferred[tuple[1]](function(){
+        var returned = fn && fn.apply(this, arguments)
+        if (returned && $.isFunction(returned.promise)) {
+          returned.promise()
+            .done(defer.resolve)
+            .fail(defer.reject)
+            .progress(defer.notify)
+        } else {
+          var context = this === promise ? defer.promise() : this,
+              values = fn ? [returned] : arguments
+          defer[tuple[0] + "With"](context, values)
+        }
+      })
+    })
+    fns = null
+  }).promise()
+}
+```
+
+`promise` 的 `then` 方法接收三个参数，分别为成功的回调、失败的回调和进度的回调。
+
+### then整体结构
+
+将 `then` 简化后，可以看到以下的结构：
+
+```javascript
+return Deferred(function(defer){}).promise()
+```
+
+返回的是 `Deferred` 方法返回的是 `deferred` 对象，`deferred` 对象上的 `promise` 方法，其实就是 `promise` 对象上的 `promise` 方法，所以 `then` 方法，最终返回的还是 `promise` 对象。所以 `promise` 可以这样一直调用下去 `promise().then().then()....` 。
+
+### Deferred 调用
+
+```javascript
+var fns = arguments
+return Deferred(function(defer) {
+  ...
+})
+fns = null
+```
+
+这里的变量 `fns` 是 `then` 所传入的参数，即上文提到的三个回调。
+
+最后的 `fns = null` ，是释放引用，让 `JS` 引擎可以进行垃圾回收。
+
+`Deferred` 的参数是一个函数，上文在分析总体结构的时候，有一句关键的代码 `if (func) func.call(deferred, deferred)` 。所以这里的函数的参数  `defer` 即为 `deferred` 对象。
+
+### 执行回调
+
+```javascript
+$.each(tuples, function(i, tuple){
+  var fn = $.isFunction(fns[i]) && fns[i]
+  deferred[tuple[1]](function(){
+    var returned = fn && fn.apply(this, arguments)
+    if (returned && $.isFunction(returned.promise)) {
+      returned.promise()
+        .done(defer.resolve)
+        .fail(defer.reject)
+        .progress(defer.notify)
+    } else {
+      var context = this === promise ? defer.promise() : this,
+          values = fn ? [returned] : arguments
+      defer[tuple[0] + "With"](context, values)
+    }
+  })
+})
+```
+
+遍历 `tuples` ， `tuples` 中的顺序，跟 `then` 中规定 `done` 、`fail` 和 `progress` 的回调顺序一致。
+
+所以用 `var fn = $.isFunction(fns[i]) && fns[i]` 来判断对应位置的参数是否为 `function` 类型，如果是，则赋值给 `fn` 。
+
+`deferred[tuple[1]]` 是对应的是 `done`、`fail` 和 `progress` 。所以在 `then` 里，会依次执行这三个方法。
+
+```javascript
+var returned = fn && fn.apply(this, arguments)
+```
+
+`returned` 是  `then` 中三个回调方法执行后返回的结果。
+
+```javascript
+if (returned && $.isFunction(returned.promise)) {
+  returned.promise()
+    .done(defer.resolve)
+    .fail(defer.reject)
+    .progress(defer.notify)
+}
+```
+
+如果回调返回的是 `promise` 对象，调用新 `promise` 对象中的 `promise` 方法，新 `promise` 对象切换状态时， 并将当前 `deferred` 对象对应的状态切换方法传入，在新 `promise` 切换状态时执行。这就实现了两个 `promise` 对象的状态交流。
+
+```javascript
+var context = this === promise ? defer.promise() : this,
+    values = fn ? [returned] : arguments
+defer[tuple[0] + "With"](context, values)
+```
+
+如果返回的不是 `promise` 对象，则判断 `this` 是否为 `promise` ，如果是，则返回 `defer.promise()` ，修正执行的上下文。
+
+然后调用对应的状态切换方法切换状态。
+
 
 
 
