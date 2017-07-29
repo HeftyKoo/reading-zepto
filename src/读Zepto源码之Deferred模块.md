@@ -287,9 +287,155 @@ promise.promise(deferred)
 
 `promise` 对象上没有状态切换方法，所以在 `then` 中，要绑定上下文的时候时候，绑定的都是 `promise` 对象，这是为了避免在执行的过程中，将执行状态改变。 
 
+## $.when
 
+```javascript
+$.when = function(sub) {
+    var resolveValues = slice.call(arguments),
+        len = resolveValues.length,
+        i = 0,
+        remain = len !== 1 || (sub && $.isFunction(sub.promise)) ? len : 0,
+        deferred = remain === 1 ? sub : Deferred(),
+        progressValues, progressContexts, resolveContexts,
+        updateFn = function(i, ctx, val){
+          return function(value){
+            ctx[i] = this
+            val[i] = arguments.length > 1 ? slice.call(arguments) : value
+            if (val === progressValues) {
+              deferred.notifyWith(ctx, val)
+            } else if (!(--remain)) {
+              deferred.resolveWith(ctx, val)
+            }
+          }
+        }
 
+    if (len > 1) {
+      progressValues = new Array(len)
+      progressContexts = new Array(len)
+      resolveContexts = new Array(len)
+      for ( ; i < len; ++i ) {
+        if (resolveValues[i] && $.isFunction(resolveValues[i].promise)) {
+          resolveValues[i].promise()
+            .done(updateFn(i, resolveContexts, resolveValues))
+            .fail(deferred.reject)
+            .progress(updateFn(i, progressContexts, progressValues))
+        } else {
+          --remain
+        }
+      }
+    }
+    if (!remain) deferred.resolveWith(resolveContexts, resolveValues)
+    return deferred.promise()
+  }
+```
 
+`when` 方法用来管理一系列的异步队列，如果所有的异步队列都执行成功，则执行成功方法，如果有一个异步执行失败，则执行失败方法。这个方法也可以传入非异步方法。
+
+### 一些变量
+
+```javascript
+var resolveValues = slice.call(arguments),
+    len = resolveValues.length,
+    i = 0,
+    remain = len !== 1 || (sub && $.isFunction(sub.promise)) ? len : 0,
+    deferred = remain === 1 ? sub : Deferred(),
+    progressValues, progressContexts, resolveContexts,
+```
+
+* resolveValues：所有的异步对象，用 `slice` 转换成数组形式。
+* len: 异步对象的个数。
+* remain: 剩余个数。这里还有个判断，是为了确定只有一个参数时，这个参数是不是异步对象，如果不是，则 `remain` 初始化为 `0` 。其他情况，初始化为当前的个数。
+* i: 当前异步对象执行的索引值。
+* deferred: `deferred` 对象，如果只有一个异步对象（只有一个参数，并且不为异步对象时， `remain` 为 `0` ），则直接使用当前的 `deferred` 对象，否则创建一个新的 `deferred` 对象。
+* progressValues： 进度回调函数数组。
+* progressContexts： 进度回调函数绑定的上下文数组
+* resolveContexts： 成功回调函数绑定的上下文数组
+
+### updateFn
+
+```javascript
+updateFn = function(i, ctx, val){
+  return function(value){
+    ctx[i] = this
+    val[i] = arguments.length > 1 ? slice.call(arguments) : value
+    if (val === progressValues) {
+      deferred.notifyWith(ctx, val)
+    } else if (!(--remain)) {
+      deferred.resolveWith(ctx, val)
+    }
+  }
+}
+```
+
+`updateFn` 方法，在每个异步对象执行 `resolve` 方法和 `progress` 方法时都调用。
+
+参数 `i` 为异步对象的索引值，参数 `ctx`  为对应的上下文数组，即 `resolveContexts` 或 `resolveContexts` ， `val` 为对应的回调函数数组，即 `progresValues` 或 `resolveValues` 。
+
+```javascript
+if (val === progressValues) {
+	deferred.notifyWith(ctx, val)
+}
+```
+
+如果为 `progress` 的回调，则调用 `deferred` 的 `notifyWith` 方法。
+
+```javascript
+else if (!(--remain)) {
+  deferred.resolveWith(ctx, val)
+}
+```
+
+否则，将 `remain` 减少 `1`，如果回调已经执行完毕，则调用 `deferred` 的 `resolveWith` 方法。
+
+### 依次处理异步对象
+
+```javascript
+if (len > 1) {
+  progressValues = new Array(len)
+  progressContexts = new Array(len)
+  resolveContexts = new Array(len)
+  for ( ; i < len; ++i ) {
+    if (resolveValues[i] && $.isFunction(resolveValues[i].promise)) {
+      resolveValues[i].promise()
+        .done(updateFn(i, resolveContexts, resolveValues))
+        .fail(deferred.reject)
+        .progress(updateFn(i, progressContexts, progressValues))
+    } else {
+      --remain
+    }
+  }
+}
+```
+
+首先初始化 `progressValues` 、`progressContexts` 和 `resolveContexts` ，数组长度为异步对象的长度。
+
+```javascript
+if (resolveValues[i] && $.isFunction(resolveValues[i].promise)) {
+  resolveValues[i].promise()
+    .done(updateFn(i, resolveContexts, resolveValues))
+    .fail(deferred.reject)
+    .progress(updateFn(i, progressContexts, progressValues))
+}
+```
+
+如果为 `promise` 对象，则调用对应的 `promise` 方法。
+
+```javascript
+else {
+  --remain
+}
+```
+
+如果不是 `promise` 对象，则将 `remian` 减少 `1` 。
+
+```javascript
+if (!remain) deferred.resolveWith(resolveContexts, resolveValues)
+return deferred.promise()
+```
+
+如果无参数，或者参数不是异步对象，或者所有的参数列表都不是异步对象，则直接调用 `resoveWith` 方法，调用成功函数列表。
+
+最后返回的是 `promise` 对象。 
 
 ## 系列文章
 
