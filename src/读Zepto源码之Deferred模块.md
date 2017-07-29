@@ -10,7 +10,7 @@
 
 ## Promise/A+ 规范
 
-规范的具体内容可以参与《[Promises/A+](https://promisesaplus.com/)》 和对应的中文翻译 《[Promise/A+规范](https://segmentfault.com/a/1190000002452115)》，这里只简单总结一下。
+规范的具体内容可以参考《[Promises/A+](https://promisesaplus.com/)》 和对应的中文翻译 《[Promise/A+规范](https://segmentfault.com/a/1190000002452115)》，这里只简单总结一下。
 
 `promise` 是一个包含兼容 `promise` 规范的函数或对象，`promise` 包含三种状态 `pending` 进行中、`fulfilled` 已完成， `rejected` 被拒绝，并且必须处于其中一种状态。
 
@@ -203,7 +203,7 @@ then: function(/* fnDone [, fnFailed [, fnProgress]] */) {
 return Deferred(function(defer){}).promise()
 ```
 
-返回的是 `Deferred` 方法返回的是 `deferred` 对象，`deferred` 对象上的 `promise` 方法，其实就是 `promise` 对象上的 `promise` 方法，所以 `then` 方法，最终返回的还是 `promise` 对象。所以 `promise` 可以这样一直调用下去 `promise().then().then()....` 。
+返回的是 `deferred` 对象，`deferred` 对象上的 `promise` 方法，其实就是 `promise` 对象上的 `promise` 方法，所以 `then` 方法，最终返回的还是 `promise` 对象。所以 `promise` 可以这样一直调用下去 `promise().then().then()....` 。
 
 ### Deferred 调用
 
