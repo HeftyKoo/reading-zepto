@@ -275,6 +275,18 @@ defer[tuple[0] + "With"](context, values)
 
 然后调用对应的状态切换方法切换状态。
 
+### promise 对象与 deferred 对象
+
+```javascript
+promise.promise(deferred)
+```
+
+从上面的分析中，可以看到，`deferred` 对象上并没有`done` 、 `fail` 和 `progress` 方法，这是从 `promise` 上扩展来的。
+
+既然已经有了一个拥有 `promise` 对象的所有方法的 `deferred` 对象，为什么还要一个额外的 `promise` 对象呢？
+
+`promise` 对象上没有状态切换方法，所以在 `then` 中，要绑定上下文的时候时候，绑定的都是 `promise` 对象，这是为了避免在执行的过程中，将执行状态改变。 
+
 
 
 
