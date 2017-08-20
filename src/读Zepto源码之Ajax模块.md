@@ -1,12 +1,23 @@
 # 读Zepto源码之Ajax模块
 
-Ajax模块也是经常会用到的模块，Ajax模块中包含了 `jsonp` 的现实，和 `XMLHttpRequest` 的封装。 
+`Ajax` 模块也是经常会用到的模块，`Ajax` 模块中包含了 `jsonp` 的现实，和 `XMLHttpRequest` 的封装。 
 
 读 Zepto 源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
 
 ## 源码版本
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
+
+## ajax的事件触发顺序
+
+`zepto` 针对 `ajax` 的发送过程，定义了以下几个事件，正常情况下的触发顺序如下：
+
+1.  `ajaxstart` : `XMLHttpRequest` 实例化前触发
+2. `ajaxBeforeSend`： 发送 `ajax` 请求前触发
+3. `ajaxSend` : 发送 `ajax` 请求时触发
+4. `ajaxSuccess` / `ajaxError` : 请求成功/失败时触发
+5. `ajaxComplete`： 请求完成（无论成功还是失败）时触发
+6. `ajaxStop`: 请求完成后触发，这个事件在 `ajaxComplete` 后触发。
 
 
 
