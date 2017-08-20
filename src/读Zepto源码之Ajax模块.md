@@ -13,13 +13,41 @@
 `zepto` 针对 `ajax` 的发送过程，定义了以下几个事件，正常情况下的触发顺序如下：
 
 1.  `ajaxstart` : `XMLHttpRequest` 实例化前触发
-2. `ajaxBeforeSend`： 发送 `ajax` 请求前触发
-3. `ajaxSend` : 发送 `ajax` 请求时触发
-4. `ajaxSuccess` / `ajaxError` : 请求成功/失败时触发
-5. `ajaxComplete`： 请求完成（无论成功还是失败）时触发
-6. `ajaxStop`: 请求完成后触发，这个事件在 `ajaxComplete` 后触发。
+2.  `ajaxBeforeSend`： 发送 `ajax` 请求前触发
+3.  `ajaxSend` : 发送 `ajax` 请求时触发
+4.  `ajaxSuccess` / `ajaxError` : 请求成功/失败时触发
+5.  `ajaxComplete`： 请求完成（无论成功还是失败）时触发
+6.  `ajaxStop`: 请求完成后触发，这个事件在 `ajaxComplete` 后触发。
 
+### ajax 方法的参数解释
 
+现在还没有讲到 `ajax` 方法，之所以要将参数提前，是因为后面的内容，不时会用到相关的参数，所以一开始先将参数解释清楚。
+
+* `type`： `HTTP` 请求的类型；
+* `url`: 请求的路径；
+* `data`： 请求参数；
+* `processData`: `GET` 请求时，是否需要将参数转换成字符串，默认为 `true` ，即默认转换成字符串；
+* `contentType`: 设置 `Content-Type` 请求头；
+* `mineType` ： 覆盖响应的 `MIME` 类型，可以是 `json`、 `jsonp`、 `script`、 `xml`、 `html`、 或者 `text`；
+* `jsonp`:  `jsonp` 请求时，携带参数的参数名，默认为 `callback`；
+* `jsonpCallback`： `jsonp` 请求时，响应成功时，执行的回调函数名，默认由 `zepto` 管理；
+* `timeout`: 超时时间，默认为 `0`；
+* `headers`：设置 `HTTP` 请求头；
+* `async`： 是否为同步请求，默认为 `false`；
+* `global`： 是否触发全局 `ajax` 事件，默认为 `true`；
+* `context`： 执行回调时（如 `jsonpCallbak`）时的上下文环境，默认为 `window`。
+* `traditional`: 是否使用传统的浅层序列化方式序列化 `data` 参数，默认为 `false`，例如有 `data` 为 `{p1:'test1', p2: {nested: 'test2'}` ，在 `traditional` 为 `false` 时，会序列化成 `p1=test1&p2[nested]=test2`， 在为 `true` 时，会序列化成 `p1=test&p2=[object+object]`；
+* `xhrFields`：`xhr` 的配置；
+* `cache`：是否允许浏览器缓存 `GET` 请求，默认为 `false`；
+* `username`：需要认证的 `HTTP` 请求的用户名；
+* `password`： 需要认证的 `HTTP` 请求的密码；
+* `dataFilter`： 对响应数据进行过滤；
+* `xhr`： `XMLHttpRequest` 实例，默认用 `XMLHttpRequest` 生成；
+* `accepts`：从服务器请求的 `MIME` 类型；
+* `beforeSend`： 请求发出前调用的函数；
+* `success`: 请求成功后调用的函数；
+* `error`： 请求出错时调用的函数；
+* `complete`： 请求完成时调用的函数，无论请求是失败还是成功。
 
 ## 系列文章
 
