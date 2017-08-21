@@ -330,7 +330,86 @@ function serializeData(options) {
 
 如果为 `GET` 请求或者为 `jsonp` ，则调用 `appendQuery` ，将参数拼接到请求地址后面。
 
+## 对外接口
 
+### $.active 
+
+```javascript
+$.active = 0
+```
+### $.ajaxSettings
+
+```javascript
+$.ajaxSettings = {
+  // Default type of request
+  type: 'GET',
+  // Callback that is executed before request
+  beforeSend: empty,
+  // Callback that is executed if the request succeeds
+  success: empty,
+  // Callback that is executed the the server drops error
+  error: empty,
+  // Callback that is executed on request complete (both: error and success)
+  complete: empty,
+  // The context for the callbacks
+  context: null,
+  // Whether to trigger "global" Ajax events
+  global: true,
+  // Transport
+  xhr: function () {
+    return new window.XMLHttpRequest()
+  },
+  // MIME types mapping
+  // IIS returns Javascript as "application/x-javascript"
+  accepts: {
+    script: 'text/javascript, application/javascript, application/x-javascript',
+    json:   jsonType,
+    xml:    'application/xml, text/xml',
+    html:   htmlType,
+    text:   'text/plain'
+  },
+  // Whether the request is to another domain
+  crossDomain: false,
+  // Default timeout
+  timeout: 0,
+  // Whether data should be serialized to string
+  processData: true,
+  // Whether the browser should be allowed to cache GET responses
+  cache: true,
+  //Used to handle the raw response data of XMLHttpRequest.
+  //This is a pre-filtering function to sanitize the response.
+  //The sanitized response should be returned
+  dataFilter: empty
+}
+```
+
+`ajax` 默认配置，这些是 `zepto` 的默认值，在使用时，可以更改成自己需要的配置。
+
+### $.param
+
+```javascript
+var escape = encodeURIComponent
+$.param = function(obj, traditional){
+  var params = []
+  params.add = function(key, value) {
+    if ($.isFunction(value)) value = value()
+    if (value == null) value = ""
+    this.push(escape(key) + '=' + escape(value))
+  }
+  serialize(params, obj, traditional)
+  return params.join('&').replace(/%20/g, '+')
+}
+```
+
+`param` 方法用来序列化参数，内部调用的主要是 `serialize` 方法，并且在容器 `params` 上定义了一个 `add` 方法，供 `serialize` 调用。
+
+`add` 方法比较简单，首先判断值 `value` 是否为 `function` ，如果是，则通过调用函数来取值，如果为 `null` 或者 `undefined` ，则 `value` 赋值为空字符串。
+
+然后将 `key` 和 `value` 用 `encodeURIComponent` 编码，用 `=` 号连接起来。
+
+接着便是简单的调用 `serialize` 方法。
+
+最后将容器中的数据用 `&` 连接起来，并且将空格替换成 `+` 号。
 
 ## 系列文章
 
