@@ -26,7 +26,7 @@
 * `type`： `HTTP` 请求的类型；
 * `url`: 请求的路径；
 * `data`： 请求参数；
-* `processData`: `GET` 请求时，是否需要将参数转换成字符串，默认为 `true` ，即默认转换成字符串；
+* `processData`: 是否需要将非 `GET` 请求的参数转换成字符串，默认为 `true` ，即默认转换成字符串；
 * `contentType`: 设置 `Content-Type` 请求头；
 * `mineType` ： 覆盖响应的 `MIME` 类型，可以是 `json`、 `jsonp`、 `script`、 `xml`、 `html`、 或者 `text`；
 * `jsonp`:  `jsonp` 请求时，携带参数的参数名，默认为 `callback`；
@@ -49,11 +49,6 @@
 * `error`： 请求出错时调用的函数；
 * `complete`： 请求完成时调用的函数，无论请求是失败还是成功。
 
-## $.active 
-
-```javascript
-$.active = 0
-```
 
 正在请求的 `ajax` 数量，初始数为 `0`。
 
@@ -194,6 +189,146 @@ function ajaxError(error, type, xhr, settings, deferred) {
 在触发事件前，调用配置中的 `error` 方法，将 `xhr` 实例，错误类型 `type` 和 `error` 对象作为回调函数的参数。
 
 随后调用 `ajaxComplete` 方法，触发 `ajaxComplete` 事件。因此，`ajaxComplete` 事件无论成功还是失败都会触发。
+
+### empty
+
+```javascript
+function empty() {}
+```
+
+空函数，用来作为回调函数配置的初始值。这样的好处是在执行回调函数时，不需要每次都判断回调函数是否存在。
+
+### ajaxDataFilter
+
+```javascript
+function ajaxDataFilter(data, type, settings) {
+  if (settings.dataFilter == empty) return data
+  var context = settings.context
+  return settings.dataFilter.call(context, data, type)
+}
+```
+
+主要用来过滤请求成功后的响应数据。
+
+如果配置中的 `dataFilter` 属性为初始值 `empty`，则将原始数据返回。
+
+如果有配置 `dataFilter`，则调用配置的回调方法，将数据 `data` 和数据类型 `type` 作为回调的参数，再将执行的结果返回。
+
+### mimeToDataType
+
+```javascript
+var htmlType = 'text/html',
+    jsonType = 'application/json',
+    scriptTypeRE = /^(?:text|application)\/javascript/i,
+    xmlTypeRE = /^(?:text|application)\/xml/i,
+function mimeToDataType(mime) {
+  if (mime) mime = mime.split(';', 2)[0]
+  return mime && ( mime == htmlType ? 'html' :
+                  mime == jsonType ? 'json' :
+                  scriptTypeRE.test(mime) ? 'script' :
+                  xmlTypeRE.test(mime) && 'xml' ) || 'text'
+}
+```
+
+返回 `dataType` 的类型。
+
+先看看这个函数中使用到的几个正则表达式，`scriptTypeRE` 匹配的是 `text/javascript` 或者 `application/javascript`， `xmlTypeRE` 匹配的是 `text/xml` 或者 `application/xml`， 都还比较简单，不作过多的解释了。
+
+`Content-Type` 的值的形式如下 `text/html; charset=utf-8`， 所以如果参数 `mime` 存在，则用 `;` 分割，取第一项，这里是 `text/html`，即为包含类型的字符串。
+
+接下来是针对 `html` 、`json`、 `script` 和  `xml` 用对应的正则进行匹配，匹配成功，返回对应的类型值，如果都不匹配，则返回 `text`。
+
+### appendQuery
+
+```javascript
+function appendQuery(url, query) {
+  if (query == '') return url
+  return (url + '&' + query).replace(/[&?]{1,2}/, '?')
+}
+```
+
+ 向 `url` 追加参数。
+
+如果 `query` 为空，则将原 `url` 返回。
+
+如果 `query` 不为空，则用 `&` 拼接 `query`。
+
+最后调用 `replace`，将 `&&` 、 `?&` ，`&?`  或 `??` 替换成 `?`。
+
+拼接出来的 `url` 的形式如 `url?key=value&key2=value`
+
+### parseArguments
+
+```javascript
+function parseArguments(url, data, success, dataType) {
+  if ($.isFunction(data)) dataType = success, success = data, data = undefined
+  if (!$.isFunction(success)) dataType = success, success = undefined
+  return {
+    url: url
+    , data: data
+    , success: success
+    , dataType: dataType
+  }
+}
+```
+
+ 这个方法是用来格式化参数的，`Ajax` 模块定义了一些便捷的调用方法，这些调用方法不需要传递 `option`，某些必填值已经采用了默认传递的方式，这些方法中有些参数是可以不需要传递的，这个方法就是来用判读那些参数有传递，那些没有传递，然后再将参数拼接成 `ajax` 所需要的 `options` 对象。
+
+### serialize
+
+```javascript
+function serialize(params, obj, traditional, scope){
+  var type, array = $.isArray(obj), hash = $.isPlainObject(obj)
+  $.each(obj, function(key, value) {
+    type = $.type(value)
+    if (scope) key = traditional ? scope :
+    scope + '[' + (hash || type == 'object' || type == 'array' ? key : '') + ']'
+    // handle data in serializeArray() format
+    if (!scope && array) params.add(value.name, value.value)
+    // recurse into nested objects
+    else if (type == "array" || (!traditional && type == "object"))
+      serialize(params, value, traditional, key)
+    else params.add(key, value)
+  })
+}
+```
+
+序列化参数。
+
+要了解这个函数，需要了解 `traditional` 参数的作用，这个参数表示是否开启以传统的浅层序列化方式来进行序列化，具体的示例见上文参数解释部分。
+
+如果参数 `obj` 的为数组，则 `array` 为 `true`， 如果为纯粹对象，则 `hash` 为 `true`。 `$.isArray` 和 `$.isPlainObject` 的源码分析见《[读Zepto源码之内部方法](https://github.com/yeyuqiudeng/reading-zepto/blob/456627c2e8199ac1d043af51177d6159fddd39bc/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%85%E9%83%A8%E6%96%B9%E6%B3%95.md#isplainobject)》。
+
+遍历需要序列化的对象 `obj`，判断 `value` 的类型 `type`， 这个 `type` 后面会用到。
+
+`scope` 是记录深层嵌套时的 `key` 值，这个 `key` 值受 `traditional` 的影响。
+
+如果 `traditional` 为 `true` ，则 `key` 为原始的 `scope` 值，即对象第一层的 `key` 值。
+
+否则，用 `[]` 拼接当前循环中的 `key` ，最终的 `key` 值会是这种形式 `scope[key][key2]...`
+
+如果 `obj` 为数组，并且 `scope` 不存在，即为第一层，直接调用 `params.add` 方法，这个方法后面会分析到。
+
+否则如果  `value` 的类型为数组或者非传统序列化方式下为对象，则递归调用 `serialize` 方法，用来处理 `key` 。
+
+其他情况调用 `params.add` 方法。
+
+### serializeData
+
+```javascript
+function serializeData(options) {
+  if (options.processData && options.data && $.type(options.data) != "string")
+    options.data = $.param(options.data, options.traditional)
+  if (options.data && (!options.type || options.type.toUpperCase() == 'GET' || 'jsonp' == options.dataType))
+    options.url = appendQuery(options.url, options.data), options.data = undefined
+}
+```
+
+序列化参数。
+
+如果 `processData` 为 `true` ，并且参数 `data` 不为字符串，则调用 `$.params` 方法序列化参数。 `$.params` 方法后面会讲到。
+
+如果为 `GET` 请求或者为 `jsonp` ，则调用 `appendQuery` ，将参数拼接到请求地址后面。
 
 
 
