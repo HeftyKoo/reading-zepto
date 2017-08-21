@@ -29,7 +29,7 @@
 * `processData`: 是否需要将非 `GET` 请求的参数转换成字符串，默认为 `true` ，即默认转换成字符串；
 * `contentType`: 设置 `Content-Type` 请求头；
 * `mineType` ： 覆盖响应的 `MIME` 类型，可以是 `json`、 `jsonp`、 `script`、 `xml`、 `html`、 或者 `text`；
-* `jsonp`:  `jsonp` 请求时，携带参数的参数名，默认为 `callback`；
+* `jsonp`:  `jsonp` 请求时，携带回调函数名的参数名，默认为 `callback`；
 * `jsonpCallback`： `jsonp` 请求时，响应成功时，执行的回调函数名，默认由 `zepto` 管理；
 * `timeout`: 超时时间，默认为 `0`；
 * `headers`：设置 `HTTP` 请求头；
@@ -410,6 +410,175 @@ $.param = function(obj, traditional){
 接着便是简单的调用 `serialize` 方法。
 
 最后将容器中的数据用 `&` 连接起来，并且将空格替换成 `+` 号。
+
+### $.ajaxJSONP
+
+```javascript
+var jsonpID = +new Date()
+$.ajaxJSONP = function(options, deferred){
+  if (!('type' in options)) return $.ajax(options)
+
+  var _callbackName = options.jsonpCallback,
+      callbackName = ($.isFunction(_callbackName) ?
+                      _callbackName() : _callbackName) || ('Zepto' + (jsonpID++)),
+      script = document.createElement('script'),
+      originalCallback = window[callbackName],
+      responseData,
+      abort = function(errorType) {
+        $(script).triggerHandler('error', errorType || 'abort')
+      },
+      xhr = { abort: abort }, abortTimeout
+
+  if (deferred) deferred.promise(xhr)
+
+  $(script).on('load error', function(e, errorType){
+    clearTimeout(abortTimeout)
+    $(script).off().remove()
+
+    if (e.type == 'error' || !responseData) {
+      ajaxError(null, errorType || 'error', xhr, options, deferred)
+    } else {
+      ajaxSuccess(responseData[0], xhr, options, deferred)
+    }
+
+    window[callbackName] = originalCallback
+    if (responseData && $.isFunction(originalCallback))
+      originalCallback(responseData[0])
+
+    originalCallback = responseData = undefined
+  })
+
+  if (ajaxBeforeSend(xhr, options) === false) {
+    abort('abort')
+    return xhr
+  }
+
+  window[callbackName] = function(){
+    responseData = arguments
+  }
+
+  script.src = options.url.replace(/\?(.+)=\?/, '?$1=' + callbackName)
+  document.head.appendChild(script)
+
+  if (options.timeout > 0) abortTimeout = setTimeout(function(){
+    abort('timeout')
+  }, options.timeout)
+
+  return xhr
+}
+```
+
+在分析源码之前，先了解一下 `jsonp` 的原理。
+
+`jsonp` 实现跨域其实是利用了 `script` 可以请求跨域资源的特点，所以实现 `jsonp` 的基本步骤就是向页面动态插入一个 `script` 标签，在请求地址上带上需要传递的参数，后端再将数据返回，前端调用回调函数进行解释。
+
+所以 `jsonp` 本质上是一个 `GET` 请求，因为链接的长度有限制，因此请求所携带的参数的长度也会有限制。
+
+### 一些变量的定义
+
+```javascript
+if (!('type' in options)) return $.ajax(options)
+
+var _callbackName = options.jsonpCallback,
+    callbackName = ($.isFunction(_callbackName) ?
+                    _callbackName() : _callbackName) || ('Zepto' + (jsonpID++)),
+    script = document.createElement('script'),
+    originalCallback = window[callbackName],
+    responseData,
+    abort = function(errorType) {
+      $(script).triggerHandler('error', errorType || 'abort')
+    },
+    xhr = { abort: abort }, abortTimeout
+
+if (deferred) deferred.promise(xhr)
+```
+
+如果配置中的请求类型没有定义，则直接调用 `$.ajax` 方法，这个方法是整个模块的核心，后面会讲到。 `jsonp` 请求的 `type` 必须为 `jsonp` 。
+
+私有变量用来临时存放配置中的 `jsonpCallback` ，即 `jsonp` 请求成功后执行的回调函数名，该配置可以为 `function` 类型。
+
+`callbackName` 是根据配置得出的回调函数名。如果 `_callbackName` 为 `function` ，则以执行的结果作为回调函数名，如果 `_callbackName` 没有配置，则用 `Zepto` + `时间戳` 作为回调函数名，时间戳初始化后，采用自增的方式来实现函数名的唯一性。
+
+`script` 用来保存创建的 `script` 节点。
+
+`originalCallback` 用来储存原始的回调函数。
+
+`responseData` 为响应的数据。
+
+`abort` 函数用来中止 `jsonp` 请求，实质上是触发了 `error` 事件。
+
+`xhr` 对象只有 `abort` 方法，如果存在 `deferred` 对象，则调用 `promise` 方法在 `xhr` 对象的基础上生成一个 `promise` 对象。
+
+`abortTimeout` 用来指定超时时间。
+
+### beforeSend
+
+```javascript
+if (ajaxBeforeSend(xhr, options) === false) {
+  abort('abort')
+  return xhr
+}
+```
+
+在发送 `jsonp` 请求前，会调用 `ajaxBeforeSend` 方法，如果返回的为 `false`，则中止 `jsonp` 请求的发送。
+
+### 发送请求
+
+```javascript
+window[callbackName] = function(){
+  responseData = arguments
+}
+
+script.src = options.url.replace(/\?(.+)=\?/, '?$1=' + callbackName)
+document.head.appendChild(script)
+```
+
+发送请求前，重写了 `window[callbackName]` 函数，将 `arguments` 赋值给 `responseData`， 这个函数会在后端返回的 `js` 代码中执行，这样 `responseData` 就可以获取得到数据了。
+
+接下来，将 `url` 最后一个参数，也即携带回调函数名的参数，拼接上回调函数名，最后将 `script` 插入到页面中，发送请求。
+
+### 请求超时
+
+```javascript
+if (options.timeout > 0) abortTimeout = setTimeout(function(){
+  abort('timeout')
+}, options.timeout)
+```
+
+ 如果有设置超时时间，则在请求超时时，触发错误事件。
+
+### 请求成功或失败
+
+```javascript
+$(script).on('load error', function(e, errorType){
+  clearTimeout(abortTimeout)
+  $(script).off().remove()
+
+  if (e.type == 'error' || !responseData) {
+    ajaxError(null, errorType || 'error', xhr, options, deferred)
+  } else {
+    ajaxSuccess(responseData[0], xhr, options, deferred)
+  }
+
+  window[callbackName] = originalCallback
+  if (responseData && $.isFunction(originalCallback))
+    originalCallback(responseData[0])
+
+  originalCallback = responseData = undefined
+})
+```
+
+在请求成功或者失败时，先清除请求超时定时器，避免触发超时错误，再将插入页面的 `script` 从页面上删除，因为数据已经获取到，不再页面这个 `script` 了。注意在删除 `script` 前，调用了 `off` 方法，将 `script` 上的事件都已经移除了。
+
+如果请求出错，则调用 `ajaxError` 方法。
+
+如果请求成功，则调用 `ajaxSuccess` 方法。
+
+之前我们把 `window[callbackName]` 重写掉了，目的是为了获取到数据，现在再重新将原来的回调函数赋值回去，在获取到数据后，如果 `originalCallback` 有定义，并且为函数，则将数据作为参数传递进去，执行。
+
+最后将数据和临时函数 `originalCallback` 清理。
+
+
 
 ## 系列文章
 
