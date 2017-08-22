@@ -474,7 +474,7 @@ $.ajaxJSONP = function(options, deferred){
 
 所以 `jsonp` 本质上是一个 `GET` 请求，因为链接的长度有限制，因此请求所携带的参数的长度也会有限制。
 
-### 一些变量的定义
+#### 一些变量的定义
 
 ```javascript
 if (!('type' in options)) return $.ajax(options)
@@ -511,7 +511,7 @@ if (deferred) deferred.promise(xhr)
 
 `abortTimeout` 用来指定超时时间。
 
-### beforeSend
+#### beforeSend
 
 ```javascript
 if (ajaxBeforeSend(xhr, options) === false) {
@@ -522,7 +522,7 @@ if (ajaxBeforeSend(xhr, options) === false) {
 
 在发送 `jsonp` 请求前，会调用 `ajaxBeforeSend` 方法，如果返回的为 `false`，则中止 `jsonp` 请求的发送。
 
-### 发送请求
+#### 发送请求
 
 ```javascript
 window[callbackName] = function(){
@@ -535,9 +535,9 @@ document.head.appendChild(script)
 
 发送请求前，重写了 `window[callbackName]` 函数，将 `arguments` 赋值给 `responseData`， 这个函数会在后端返回的 `js` 代码中执行，这样 `responseData` 就可以获取得到数据了。
 
-接下来，将 `url` 最后一个参数，也即携带回调函数名的参数，拼接上回调函数名，最后将 `script` 插入到页面中，发送请求。
+接下来，将 `url` 的`=?` 占位符，替换成回调函数名，最后将 `script` 插入到页面中，发送请求。
 
-### 请求超时
+#### 请求超时
 
 ```javascript
 if (options.timeout > 0) abortTimeout = setTimeout(function(){
@@ -547,7 +547,7 @@ if (options.timeout > 0) abortTimeout = setTimeout(function(){
 
  如果有设置超时时间，则在请求超时时，触发错误事件。
 
-### 请求成功或失败
+#### 请求成功或失败
 
 ```javascript
 $(script).on('load error', function(e, errorType){
@@ -578,6 +578,345 @@ $(script).on('load error', function(e, errorType){
 
 最后将数据和临时函数 `originalCallback` 清理。
 
+### $.ajax
+
+`$.ajax` 方法是整个模块的核心，代码太长，就不全部贴在这里了，下面一部分一部分来分析。
+
+#### 处理默认配置
+
+```javascript
+var settings = $.extend({}, options || {}),
+    deferred = $.Deferred && $.Deferred(),
+    urlAnchor, hashIndex
+for (key in $.ajaxSettings) if (settings[key] === undefined) settings[key] = $.ajaxSettings[key]
+ajaxStart(settings)
+```
+
+`settings` 为所传递配置的副本。
+
+`deferred` 为 `deferred` 对象。
+
+`urlAnchor` 为浏览器解释的路径，会用来判断是否跨域，后面会讲到。
+
+`hashIndex` 为路径中 `hash` 的索引。
+
+用 `for ... in` 去遍历 `$.ajaxSettings` ，作为配置的默认值。
+
+配置处理完毕后，调用 `ajaxStart` 函数，触发 `ajaxStart` 事件。
+
+#### 判断是否跨域
+
+```javascript
+originAnchor = document.createElement('a')
+originAnchor.href = window.location.href
+
+if (!settings.crossDomain) {
+  urlAnchor = document.createElement('a')
+  urlAnchor.href = settings.url
+  // cleans up URL for .href (IE only), see https://github.com/madrobby/zepto/pull/1049
+  urlAnchor.href = urlAnchor.href
+  settings.crossDomain = (originAnchor.protocol + '//' + originAnchor.host) !== (urlAnchor.protocol + '//' + urlAnchor.host)
+}
+```
+
+如果跨域 `crossDomain` 没有设置，则需要检测请求的地址是否跨域。
+
+`originAnchor` 是当前页面链接，整体思路是创建一个 `a` 节点，将 `href` 属性设置为当前请求的地址，然后获取节点的 `protocol` 和 `host`，看跟当前页面的链接用同样方式拼接出来的地址是否一致。
+
+注意到这里的 `urlAnchor` 进行了两次赋值，这是因为 `ie` 默认不会对链接 `a` 添加端口号，但是会对 `window.location.href` 添加端口号，如果端口号为 `80` 时，会出现不一致的情况。具体见:[pr#1049](https://github.com/madrobby/zepto/pull/1049)
+
+#### 处理请求地址
+
+```javascript
+if (!settings.url) settings.url = window.location.toString()
+if ((hashIndex = settings.url.indexOf('#')) > -1) settings.url = settings.url.slice(0, hashIndex)
+serializeData(settings)
+```
+
+如果没有配置 `url` ，则用当前页面的地址作为请求地址。
+
+如果请求的地址带有 `hash`， 则将 `hash` 去掉，因为 `hash` 并不会传递给后端。
+
+然后调用 `serializeData` 方法来序列化请求参数 `data`。
+
+#### 处理缓存
+
+```javascript
+var dataType = settings.dataType, hasPlaceholder = /\?.+=\?/.test(settings.url)
+if (hasPlaceholder) dataType = 'jsonp'
+
+if (settings.cache === false || (
+  (!options || options.cache !== true) &&
+  ('script' == dataType || 'jsonp' == dataType)
+))
+  settings.url = appendQuery(settings.url, '_=' + Date.now())
+```
+
+`hasPlaceholder` 的正则匹配规则跟上面分析到 `jsonp` 的替换 `callbackName` 的正则一样，约定以这样的方式来替换 `url` 中的 `callbackName`。因此，也可以用这样的正则来判断是否为 `jsonp`。
+
+如果 `cache` 的配置为 `false` ，或者在 `dataType` 为 `script` 或者 `jsonp` 的情况下， `cache` 没有设置为 `true` 时，表示不需要缓存，清除浏览器缓存的方式也很简单，就是往请求地址的后面加上一个时间戳，这样每次请求的地址都不一样，浏览器自然就没有缓存了。
+
+#### 处理jsonp
+
+```javascript
+if ('jsonp' == dataType) {
+  if (!hasPlaceholder)
+    settings.url = appendQuery(settings.url,
+                               settings.jsonp ? (settings.jsonp + '=?') : settings.jsonp === false ? '' : 'callback=?')
+  return $.ajaxJSONP(settings, deferred)
+}
+```
+
+判断 `dataType` 的类型为 `jsonp` 时，会对 `url` 进行一些处理。
+
+如果还没有 `?=` 占位符，则向 `url` 中追加占位符。
+
+如果 `settings.jsonp` 存在，则追加 `settings.jsonp`  + `=?`。
+
+如果 `settings.jsonp` 为 `false`， 则不向 `url` 中追加东西。
+
+否则默认追加 `callback=?`。
+
+`url` 拼接完毕后，调用 `$.ajaxJSONP` 方法，发送 `jsonp` 请求。
+
+#### 一些变量
+
+```javascript
+var mime = settings.accepts[dataType],
+    headers = { },
+    setHeader = function(name, value) { headers[name.toLowerCase()] = [name, value] },
+    protocol = /^([\w-]+:)\/\//.test(settings.url) ? RegExp.$1 : window.location.protocol,
+    xhr = settings.xhr(),
+    nativeSetHeader = xhr.setRequestHeader,
+    abortTimeout
+
+if (deferred) deferred.promise(xhr)
+```
+
+`mime` 获取数据的 `mime` 类型。
+
+`headers` 为请求头。
+
+`setHeader` 为设置请求头的方法，其实是往 `headers` 上增加对应的 `key` `value` 值。
+
+`protocol` 为协议，匹配一个或多个以字母、数字或者 `-` 开头，并且后面为 `://` 的字符串。优先从配置的 `url` 中获取，如果没有配置 `url`，则取 `window.location.protocol`。
+
+`xhr` 为 `XMLHttpRequest` 实例。
+
+`nativeSetHeader` 为 `xhr` 实例上的 `setRequestHeader` 方法。
+
+`abortTimeout` 为超时定时器的 `id`。
+
+如果 `deferred` 对象存在，则调用 `promise` 方法，以 `xhr` 为基础生成一个 `promise` 。
+
+#### 设置请求头
+
+```javascript
+if (!settings.crossDomain) setHeader('X-Requested-With', 'XMLHttpRequest')
+setHeader('Accept', mime || '*/*')
+if (mime = settings.mimeType || mime) {
+  if (mime.indexOf(',') > -1) mime = mime.split(',', 2)[0]
+  xhr.overrideMimeType && xhr.overrideMimeType(mime)
+}
+if (settings.contentType || (settings.contentType !== false && settings.data && settings.type.toUpperCase() != 'GET'))
+  setHeader('Content-Type', settings.contentType || 'application/x-www-form-urlencoded')
+
+if (settings.headers) for (name in settings.headers) setHeader(name, settings.headers[name])
+xhr.setRequestHeader = setHeader
+```
+
+如果不是跨域请求时，设置请求头 `X-Requested-With` 的值为 `XMLHttpRequest` 。这个请求头的作用是告诉服务端，这个请求为 `ajax` 请求。
+
+ `setHeader('Accept', mime || '*/*')` 用来设置客户端接受的资源类型。
+
+当 `mime` 存在时，调用 `overrideMimeType` 方法来重写 `response` 的 `content-type` ，使得服务端返回的类型跟客户端要求的类型不一致时，可以按照指定的格式来解释。具体可以参见这篇文章 《[你真的会使用XMLHttpRequest吗？](https://segmentfault.com/a/1190000004322487)》。
+
+如果有指定 `contentType` ，
+
+或者 `contentType` 没有设置为 `false` ，并且 `data` 存在以及请求类型不为 `GET` 时，设置 `Content-Type` 为指定的 `contentType` ，在没有指定时，设置为 `application/x-www-form-urlencoded` 。所以没有指定 `contentType` 时， `POST` 请求，默认的 `Content-Type` 为 `application/x-www-form-urlencoded`。
+
+如果有配置 `headers` ，则遍历 `headers` 配置，分别调用 `setHeader` 方法配置。
+
+#### before send
+
+```javascript
+if (ajaxBeforeSend(xhr, settings) === false) {
+  xhr.abort()
+  ajaxError(null, 'abort', xhr, settings, deferred)
+  return xhr
+}
+```
+
+调用 `ajaxBeforeSend` 方法，如果返回的为 `false` ，则中止 `ajax` 请求。
+
+#### 同步和异步请求的处理
+
+```javascript
+var async = 'async' in settings ? settings.async : true
+xhr.open(settings.type, settings.url, async, settings.username, settings.password)
+```
+
+如果有配置 `async` ，则采用配置中的值，否则，默认发送的是异步请求。
+
+接着调用 `open` 方法，创建一个请求。
+
+#### 创建请求后的配置
+
+```javascript
+if (settings.xhrFields) for (name in settings.xhrFields) xhr[name] = settings.xhrFields[name]
+
+for (name in headers) nativeSetHeader.apply(xhr, headers[name])
+```
+
+ 如果有配置 `xhrFields` ，则遍历，设置对应的 `xhr` 属性。
+
+再遍历上面配置的 `headers` 对象，调用 `setRequestHeader` 方法，设置请求头，注意这里的请求头必须要在 `open` 之后，在 `send` 之前设置。
+
+#### 发送请求
+
+```javascript
+xhr.send(settings.data ? settings.data : null)
+```
+
+发送请求很简单，调用 `xhr.send` 方法，将配置中的数据传入即可。
+
+#### 请求响应成功后的处理
+
+```javascript
+xhr.onreadystatechange = function(){
+  if (xhr.readyState == 4) {
+    xhr.onreadystatechange = empty
+    clearTimeout(abortTimeout)
+    var result, error = false
+    if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304 || (xhr.status == 0 && protocol == 'file:')) {
+      dataType = dataType || mimeToDataType(settings.mimeType || xhr.getResponseHeader('content-type'))
+
+      if (xhr.responseType == 'arraybuffer' || xhr.responseType == 'blob')
+        result = xhr.response
+      else {
+        result = xhr.responseText
+
+        try {
+          // http://perfectionkills.com/global-eval-what-are-the-options/
+          // sanitize response accordingly if data filter callback provided
+          result = ajaxDataFilter(result, dataType, settings)
+          if (dataType == 'script')    (1,eval)(result)
+          else if (dataType == 'xml')  result = xhr.responseXML
+          else if (dataType == 'json') result = blankRE.test(result) ? null : $.parseJSON(result)
+        } catch (e) { error = e }
+
+        if (error) return ajaxError(error, 'parsererror', xhr, settings, deferred)
+      }
+
+      ajaxSuccess(result, xhr, settings, deferred)
+    } else {
+      ajaxError(xhr.statusText || null, xhr.status ? 'error' : 'abort', xhr, settings, deferred)
+    }
+  }
+}
+```
+
+##### readyState
+
+`readyState` 有以下5种状态，状态切换时，会响应 `onreadystatechange` 的回调。
+
+| 0    | `xhr` 实例已经创建，但是还没有调用 `open` 方法。 |
+| ---- | ------------------------------- |
+| 1    | 已经调用 `open` 方法                  |
+| 2    | 请求已经发送，可以获取响应头和状态 `status`      |
+| 3    | 下载中，部分响应数据已经可以使用                |
+| 4    | 请求完成                            |
+
+具体见 [MDN:XMLHttpRequest.readyState](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/readyState)
+
+##### 清理工作
+
+```javascript
+xhr.onreadystatechange = empty
+clearTimeout(abortTimeout)
+```
+
+当 `readyState` 变为 `4` 时，表示请求完成（无论成功还是失败），这时需要将 `onreadystatechange` 重新赋值为 `empty` 函数，清除超时响应定时器，避免定时器任务的执行。
+
+##### 成功状态判断
+
+```javascript
+if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304 || (xhr.status == 0 && protocol == 'file:')) {
+          ...
+   }
+```
+
+ 这里判断的是 `http` 状态码，前面几个状态码可以参考 [HTTP response status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)。
+
+解释一下最后这个条件 `xhr.status == 0 && protocol == 'file:'`。
+
+`status` 为 `0` 时，表示请求并没有到达服务器，有几种情况会造成 `status` 为 `0` 的情况，例如网络不通，不合法的跨域请求，防火墙拦截等。
+
+直接用本地文件的方式打开，也会出现  `status` 为 `0` 的情况，但是我在 `chrome` 上测试，在这种情况下只能取到 		`status` ， `responseType` 和 `responseText` 都取不到，不清楚这个用本地文件打开时，进入成功判断的目的何在。
+
+##### 处理数据
+
+```javascript
+blankRE = /^\s*$/,
+
+dataType = dataType || mimeToDataType(settings.mimeType || xhr.getResponseHeader('content-type'))
+if (xhr.responseType == 'arraybuffer' || xhr.responseType == 'blob')
+  result = xhr.response
+else {
+  result = xhr.responseText
+
+  try {
+    // http://perfectionkills.com/global-eval-what-are-the-options/
+    // sanitize response accordingly if data filter callback provided
+    result = ajaxDataFilter(result, dataType, settings)
+    if (dataType == 'script')    (1,eval)(result)
+    else if (dataType == 'xml')  result = xhr.responseXML
+    else if (dataType == 'json') result = blankRE.test(result) ? null : $.parseJSON(result)
+  } catch (e) { error = e }
+  if (error) return ajaxError(error, 'parsererror', xhr, settings, deferred)
+```
+
+首先获取 `dataType`，后面会根据 `dataType` 来判断获得的数据类型，进而调用来同的方法来处理。
+
+如果数据为 `arraybuffer` 或 `blob` 对象时，即为二进制数据时，`result` 从 `response` 中直接取得。
+
+否则，用 `responseText` 获取数据，然后再对数据尝试解释。
+
+在解释数据前，调用 `ajaxDataFilter` 对数据进行过滤。
+
+如果数据类型为 `script` ，则使用 `eval` 方法，执行返回的 `script` 内容。
+
+这里为什么用 `(1, eval)` ，而不是直接用 `eval` 呢，是为了确保 `eval` 执行的作用域是在 `window` 下。具体参考：[(1,eval)('this') vs eval('this') in JavaScript?](https://stackoverflow.com/questions/9107240/1-evalthis-vs-evalthis-in-javascript) 和 《[Global eval. What are the options?](http://perfectionkills.com/global-eval-what-are-the-options/)》
+
+如果 `dataType` 为 `xml` ，则调用`responseXML` 方法
+
+如果为 `json` ，返回的内容为空时，结果返回 `null` ，如果不为空，调用 `$.parseJSON` 方法，格式化为 `json` 格式。相关分析见《[读zepto源码之工具函数](https://github.com/yeyuqiudeng/reading-zepto/blob/4143f028beff94ce3834e41620fdea48b764301c/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E5%B7%A5%E5%85%B7%E5%87%BD%E6%95%B0.md#parsejson)》
+
+如果解释出错了，则调用 `ajaxError` 方法，触发 `ajaxError` 事件，事件类型为 `parseerror`。
+
+如果都成功了，则调用  `ajaxSuccess` 方法，执行成功回调。
+
+##### 响应出错
+
+```javascript
+ajaxError(xhr.statusText || null, xhr.status ? 'error' : 'abort', xhr, settings, deferred)
+```
+
+如果 `status` 不在成功的范围内，则调用 `ajaxError` 方法，触发 `ajaxError` 事件。
+
+#### 响应超时
+
+```javascript
+if (settings.timeout > 0) abortTimeout = setTimeout(function(){
+  xhr.onreadystatechange = empty
+  xhr.abort()
+  ajaxError(null, 'timeout', xhr, settings, deferred)
+}, settings.timeout)
+```
+
+如果有设置超时时间，则设置一个定时器，超时时，首先要将 `onreadystatechange` 的回调设置为空函数 `empty` ，避免超时响应执行完毕后，请求完成，再次执行成功回调。
+
+然后调用 `xhr.abort` 方法，取消请求的发送，并且调用 `ajaxError` 方法，触发 `ajaxError` 事件。
 
 
 ## 系列文章
@@ -604,6 +943,12 @@ $(script).on('load error', function(e, errorType){
 * [读zepto源码（3) ajax](http://ysha.me/2016/07/19/07-19-%E8%AF%BBzepto%E6%BA%90%E7%A0%81%EF%BC%883%EF%BC%89ajax/)
 * [你真的会使用XMLHttpRequest吗？](https://segmentfault.com/a/1190000004322487)
 * [原来你是这样的 jsonp(原理与具体实现细节)](https://juejin.im/post/593d7f0a128fe1006aea235f)
+* [一个普通的 Zepto 源码分析（二） - ajax 模块](http://www.cnblogs.com/BlackStorm/p/Zepto-Analysing-For-Ajax-Module.html)
+* [MDN:XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest)
+* [fetch.spec.whatwg.org](https://fetch.spec.whatwg.org/#responses)
+* [HTTP status code 0 - what does this mean for fetch, or XMLHttpRequest?](https://stackoverflow.com/questions/872206/http-status-code-0-what-does-this-mean-for-fetch-or-xmlhttprequest)
+* [(1,eval)('this') vs eval('this') in JavaScript?](https://stackoverflow.com/questions/9107240/1-evalthis-vs-evalthis-in-javascript)
+* [Global eval. What are the options?](http://perfectionkills.com/global-eval-what-are-the-options/)
 
 ## License
 
