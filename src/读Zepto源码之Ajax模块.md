@@ -951,7 +951,55 @@ $.getJSON = function(/* url, data, success */){
 }
 ```
 
-`$.getJSON` 跟 `$.get` 差不多，比 `$.get` 更省了一个 `dataType` 的参数，这里指定了 `dataType` 为 `json` 类型。 
+`$.getJSON` 跟 `$.get` 差不多，比 `$.get` 更省了一个 `dataType` 的参数，这里指定了 `dataType` 为 `json` 类型。
+
+### $.fn.load
+
+```javascript
+$.fn.load = function(url, data, success){
+  if (!this.length) return this
+  var self = this, parts = url.split(/\s/), selector,
+      options = parseArguments(url, data, success),
+      callback = options.success
+  if (parts.length > 1) options.url = parts[0], selector = parts[1]
+  options.success = function(response){
+    self.html(selector ?
+              $('<div>').html(response.replace(rscript, "")).find(selector)
+              : response)
+    callback && callback.apply(self, arguments)
+  }
+  $.ajax(options)
+  return this
+}
+```
+
+ `load` 方法是用 `ajax` 的方式，请求一个 `html` 文件，并将请求的文件插入到页面中。
+
+`url` 可以指定选择符，选择符用空格分割，如果有指定选择符，则只将匹配选择符的文档插入到页面中。`url` 的格式为 `请求地址 选择符`。
+
+ ```javascript
+var self = this, parts = url.split(/\s/), selector,
+    options = parseArguments(url, data, success),
+    callback = options.success
+if (parts.length > 1) options.url = parts[0], selector = parts[1]
+ ```
+
+`parts` 是用空格分割后的结果，如果有选择符，则 `length` 会大于 `1`，数组的第一项为请求地址，第二项为选择符。
+
+调用 `parseArguments` 用来重新调整参数，因为 `data` 和 `success` 都是可选的。
+
+```javascript
+options.success = function(response){
+  self.html(selector ?
+            $('<div>').html(response.replace(rscript, "")).find(selector)
+            : response)
+  callback && callback.apply(self, arguments)
+}
+```
+
+请求成功后，如果有 `selector` ，则从文档中筛选符合的文档插入页面，否则，将返回的文档全部插入页面。
+
+如果有配置回调函数，则执行回调。
 
 ## 系列文章
 
