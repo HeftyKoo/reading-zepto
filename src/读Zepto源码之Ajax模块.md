@@ -928,6 +928,20 @@ $.get = function(/* url, data, success, dataType */){
 
 `$.get` 是 `$.ajax` `GET` 请求的便捷方法，内部调用了 `$.ajax` ，不需要指定请求类型。
 
+#### $.post
+
+```javascript
+$.post = function(/* url, data, success, dataType */){
+  var options = parseArguments.apply(null, arguments)
+  options.type = 'POST'
+  return $.ajax(options)
+}
+
+```
+
+ `$.post` 是 `$.ajax` `POST` 请求的便捷方法，跟 `$.get` 一样，只开放了 `url`、`data` 、`success` 和 `dataType` 等几个接口参数，默认配置了 `type` 为 `POST` 请求。	
+
+
 
 ## 系列文章
 
