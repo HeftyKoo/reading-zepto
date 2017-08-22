@@ -50,8 +50,6 @@
 * `complete`： 请求完成时调用的函数，无论请求是失败还是成功。
 
 
-正在请求的 `ajax` 数量，初始数为 `0`。
-
 ## 内部方法
 
 ### triggerAndReturn
@@ -337,6 +335,8 @@ function serializeData(options) {
 ```javascript
 $.active = 0
 ```
+正在请求的 `ajax` 数量，初始时为 `0`。
+
 ### $.ajaxSettings
 
 ```javascript
