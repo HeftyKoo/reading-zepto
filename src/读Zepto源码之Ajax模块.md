@@ -42,7 +42,7 @@
 * `username`：需要认证的 `HTTP` 请求的用户名；
 * `password`： 需要认证的 `HTTP` 请求的密码；
 * `dataFilter`： 对响应数据进行过滤；
-* `xhr`： `XMLHttpRequest` 实例，默认用 `XMLHttpRequest` 生成；
+* `xhr`： `XMLHttpRequest` 实例，默认用 `new XMLHttpRequest()` 生成；
 * `accepts`：从服务器请求的 `MIME` 类型；
 * `beforeSend`： 请求发出前调用的函数；
 * `success`: 请求成功后调用的函数；
@@ -127,7 +127,7 @@ function ajaxBeforeSend(xhr, settings) {
 
 这两个事件很相似，只不过 `ajaxBeforedSend` 事件可以通过外界的配置来取消事件的触发。
 
-在触发 `ajaxBeforeSend` 事件之前，会调用配置中的 `beforeSend` 方法，如果 `befoeSend` 方法返回的为 `false`时，则取消触发 `ajaxBeforeSend` 事件。
+在触发 `ajaxBeforeSend` 事件之前，会调用配置中的 `beforeSend` 方法，如果 `befoeSend` 方法返回的为 `false`时，则取消触发 `ajaxBeforeSend` 事件，并且会取消后续 `ajax` 请求的发送，后面会讲到。
 
 否则触发 `ajaxBeforeSend` 事件，并且将 `xhr` 事件，和配置 `settings` 作为事件携带的数据。
 
@@ -232,7 +232,7 @@ function mimeToDataType(mime) {
 
 返回 `dataType` 的类型。
 
-先看看这个函数中使用到的几个正则表达式，`scriptTypeRE` 匹配的是 `text/javascript` 或者 `application/javascript`， `xmlTypeRE` 匹配的是 `text/xml` 或者 `application/xml`， 都还比较简单，不作过多的解释了。
+先看看这个函数中使用到的几个正则表达式，`scriptTypeRE` 匹配的是 `text/javascript` 或者 `application/javascript`， `xmlTypeRE` 匹配的是 `text/xml` 或者 `application/xml`， 都还比较简单，不作过多的解释。
 
 `Content-Type` 的值的形式如下 `text/html; charset=utf-8`， 所以如果参数 `mime` 存在，则用 `;` 分割，取第一项，这里是 `text/html`，即为包含类型的字符串。
 
@@ -401,7 +401,7 @@ $.param = function(obj, traditional){
 }
 ```
 
-`param` 方法用来序列化参数，内部调用的主要是 `serialize` 方法，并且在容器 `params` 上定义了一个 `add` 方法，供 `serialize` 调用。
+`param` 方法用来序列化参数，内部调用的是 `serialize` 方法，并且在容器 `params` 上定义了一个 `add` 方法，供 `serialize` 调用。
 
 `add` 方法比较简单，首先判断值 `value` 是否为 `function` ，如果是，则通过调用函数来取值，如果为 `null` 或者 `undefined` ，则 `value` 赋值为空字符串。
 
@@ -568,7 +568,7 @@ $(script).on('load error', function(e, errorType){
 })
 ```
 
-在请求成功或者失败时，先清除请求超时定时器，避免触发超时错误，再将插入页面的 `script` 从页面上删除，因为数据已经获取到，不再页面这个 `script` 了。注意在删除 `script` 前，调用了 `off` 方法，将 `script` 上的事件都已经移除了。
+在请求成功或者失败时，先清除请求超时定时器，避免触发超时错误，再将插入页面的 `script` 从页面上删除，因为数据已经获取到，不再需要这个 `script` 了。注意在删除 `script` 前，调用了 `off` 方法，将 `script` 上的事件都移除了。
 
 如果请求出错，则调用 `ajaxError` 方法。
 
@@ -836,7 +836,7 @@ xhr.onreadystatechange = empty
 clearTimeout(abortTimeout)
 ```
 
-当 `readyState` 变为 `4` 时，表示请求完成（无论成功还是失败），这时需要将 `onreadystatechange` 重新赋值为 `empty` 函数，清除超时响应定时器，避免定时器任务的执行。
+当 `readyState` 变为 `4` 时，表示请求完成（无论成功还是失败），这时需要将 `onreadystatechange` 重新赋值为 `empty` 函数，清除超时响应定时器，避免定时器超时的任务执行。
 
 ##### 成功状态判断
 
@@ -846,7 +846,7 @@ if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304 || (xhr.status 
    }
 ```
 
- 这里判断的是 `http` 状态码，前面几个状态码可以参考 [HTTP response status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)。
+这里判断的是 `http` 状态码，状态码的含义可以参考 [HTTP response status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)。
 
 解释一下最后这个条件 `xhr.status == 0 && protocol == 'file:'`。
 
@@ -876,7 +876,7 @@ else {
   if (error) return ajaxError(error, 'parsererror', xhr, settings, deferred)
 ```
 
-首先获取 `dataType`，后面会根据 `dataType` 来判断获得的数据类型，进而调用来同的方法来处理。
+首先获取 `dataType`，后面会根据 `dataType` 来判断获得的数据类型，进而调用不同的方法来处理。
 
 如果数据为 `arraybuffer` 或 `blob` 对象时，即为二进制数据时，`result` 从 `response` 中直接取得。
 
