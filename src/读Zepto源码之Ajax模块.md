@@ -918,6 +918,16 @@ if (settings.timeout > 0) abortTimeout = setTimeout(function(){
 
 然后调用 `xhr.abort` 方法，取消请求的发送，并且调用 `ajaxError` 方法，触发 `ajaxError` 事件。
 
+### $.get
+
+```javascript
+$.get = function(/* url, data, success, dataType */){
+  return $.ajax(parseArguments.apply(null, arguments))
+}
+```
+
+`$.get` 是 `$.ajax` `GET` 请求的便捷方法，内部调用了 `$.ajax` ，不需要指定请求类型。
+
 
 ## 系列文章
 
