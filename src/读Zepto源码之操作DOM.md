@@ -121,7 +121,7 @@ var inside = operatorIndex % 2 //=> prepend, append
 
 遍历 `adjacencyOperators`，得到对应的方法名 `operator` 和方法名在数组中的索引 `operatorIndex`。
 
-定义了一个 `inside` 变量，当 `operatorIndex` 为偶数时，`inside` 的值为 `true`，也就是 `operator` 的值为 `prepend` 或 `append` 时，`inside` 的值为 `true` 。这个可以用来区分 `content` 是插入到元素内部还是外部的方法。
+定义了一个 `inside` 变量，当 `operatorIndex` 为奇数时，`inside` 的值为 `true`，也就是 `operator` 的值为 `prepend` 或 `append` 时，`inside` 的值为 `true` 。这个可以用来区分 `content` 是插入到元素内部还是外部的方法。
 
 `$.fn[operator]` 即为 `$.fn` 对象设置对应的属性值（方法名）。
 
