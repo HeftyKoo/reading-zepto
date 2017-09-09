@@ -12,6 +12,5 @@
 
 但是，在下面的场景中，你可能会遇到麻烦，如大型的图片画廊和幻灯片，或者是异步加载新数据的 `web` 应用，例如模拟不同版块切换时的原生动画（是的，你可以用移动端 `Safari` 模拟 `Flipboard` 的切换效果 ）。
 
-<img src="https://www.fngtps.com/2010/mobile-safari-image-resource-limit-workaround/ipad_example1.jpg" width="340px" />
-<img src="https://www.fngtps.com/2010/mobile-safari-image-resource-limit-workaround/ipad_example2.jpg" width="340px" />
+<img src="https://www.fngtps.com/2010/mobile-safari-image-resource-limit-workaround/ipad_example1.jpg" width="340px" /><img src="https://www.fngtps.com/2010/mobile-safari-image-resource-limit-workaround/ipad_example2.jpg" width="340px" />
 
