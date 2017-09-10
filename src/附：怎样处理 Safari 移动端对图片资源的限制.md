@@ -2,6 +2,10 @@
 
 本文翻译自《[How to work around the Mobile Safari image resource limit](https://www.fngtps.com/2010/mobile-safari-image-resource-limit-workaround/)》，原文写于2010年10月25日。可能部分限制已经不再适用。
 
+翻译本文的目的是作为《[读Zepto源码之assets模块](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8Bassets%E6%A8%A1%E5%9D%97.md)》的附文，读Zepto源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
+
+正文开始：
+
 受限于 `Ipad` 和 `Iphone` 的可用内存，`Safari` 浏览器的移动端会比桌面端有着更严格的[资源使用限制](https://developer.apple.com/library/safari/documentation/AppleApplications/Reference/SafariWebContent/CreatingContentforSafarioniPhone/CreatingContentforSafarioniPhone.html#//apple_ref/doc/uid/TP40006482-SW15)
 
 其中之一是每个 `HTML` 页面的图片数据总量。当移动端的 `Safari` 浏览器加载了 `8` 到 `10MB` 的图片数据后，就会停止加载其他图片，甚至浏览器还会崩溃。
