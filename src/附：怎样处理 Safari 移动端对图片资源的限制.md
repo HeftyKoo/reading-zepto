@@ -1,5 +1,7 @@
 # 附：怎样处理 Safari 移动端对图片资源的限制
 
+原文作者：Thijs van der Vossen
+
 本文翻译自《[How to work around the Mobile Safari image resource limit](https://www.fngtps.com/2010/mobile-safari-image-resource-limit-workaround/)》，原文写于2010年10月25日。可能部分限制已经不再适用。
 
 翻译本文的目的是作为《[读Zepto源码之assets模块](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8Bassets%E6%A8%A1%E5%9D%97.md)》的附文，读Zepto源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
