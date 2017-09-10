@@ -1,7 +1,3 @@
----
-
----
-
 # 附：怎样处理 Safari 移动端对图片资源的限制
 
 本文翻译自《[How to work around the Mobile Safari image resource limit](https://www.fngtps.com/2010/mobile-safari-image-resource-limit-workaround/)》，原文写于2010年10月25日。可能部分限制已经不再适用。
