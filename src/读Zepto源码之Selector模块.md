@@ -8,6 +8,21 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## 辅助方法
+
+### visible
+
+```javascript
+function visible(elem){
+  elem = $(elem)
+  return !!(elem.width() || elem.height()) && elem.css("display") !== "none"
+}
+```
+
+判断元素是否可见。
+
+可见的标准是元素有宽或者高，并且 `display` 值不为 `none`。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
