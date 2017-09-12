@@ -23,6 +23,38 @@ function visible(elem){
 
 可见的标准是元素有宽或者高，并且 `display` 值不为 `none`。
 
+### filters
+
+```javascript
+var filters = $.expr[':'] = {
+  visible:  function(){ if (visible(this)) return this },
+  hidden:   function(){ if (!visible(this)) return this },
+  selected: function(){ if (this.selected) return this },
+  checked:  function(){ if (this.checked) return this },
+  parent:   function(){ return this.parentNode },
+  first:    function(idx){ if (idx === 0) return this },
+  last:     function(idx, nodes){ if (idx === nodes.length - 1) return this },
+  eq:       function(idx, _, value){ if (idx === value) return this },
+  contains: function(idx, _, text){ if ($(this).text().indexOf(text) > -1) return this },
+  has:      function(idx, _, sel){ if (zepto.qsa(this, sel).length) return this }
+}
+```
+
+定义了一系列的过滤函数，返回符合条件的元素。这些过滤函数会将集合中符合条件的元素过滤出来，是实现相关选择器的核心。
+
+* visible: 过滤可见元素，匹配 `el:visible` 选择器
+* hidden: 过滤不可见元素， 匹配 `el:hidden` 选择器
+* selected: 过滤选中的元素，匹配 `el:selected` 选择器
+* checked: 过滤勾选中的元素，匹配 `el:checked` 选择器
+* parent: 返回至少包含一个子元素的元素，匹配 `el:parent` 选择器
+* first: 返回第一个元素，匹配 `el:first` 选择器
+* last: 返回最后一个元素，匹配 `el:last` 选择器
+* eq: 返回指定索引的元素，匹配 `el:eq(index)` 选择器
+* contains: 返回包含指定文本的元素，匹配 `el:contains(text)`
+* has: 返回匹配指定选择器的元素，匹配 `el:has(sel)`
+
+
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
