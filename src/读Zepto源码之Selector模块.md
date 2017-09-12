@@ -2,6 +2,8 @@
 
 `Selector` 模块是对 `Zepto` 选择器的扩展，使得 `Zepto` 选择器也可以支持部分 `CSS3` 选择器和 `eq` 等 `Zepto` 定义的选择器。
 
+在阅读本篇文章之前，最好先阅读《[读Zepto源码之神奇的$](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E7%A5%9E%E5%A5%87%E7%9A%84%24.md)》。
+
 读 Zepto 源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
 
 ## 源码版本
@@ -53,7 +55,61 @@ var filters = $.expr[':'] = {
 * contains: 返回包含指定文本的元素，匹配 `el:contains(text)`
 * has: 返回匹配指定选择器的元素，匹配 `el:has(sel)`
 
+### process
 
+```javascript
+var filterRe = new RegExp('(.*):(\\w+)(?:\\(([^)]+)\\))?$\\s*'),
+function process(sel, fn) {
+  sel = sel.replace(/=#\]/g, '="#"]')
+  var filter, arg, match = filterRe.exec(sel)
+  if (match && match[2] in filters) {
+    filter = filters[match[2]], arg = match[3]
+    sel = match[1]
+    if (arg) {
+      var num = Number(arg)
+      if (isNaN(num)) arg = arg.replace(/^["']|["']$/g, '')
+      else arg = num
+    }
+  }
+  return fn(sel, filter, arg)
+}
+```
+
+`process` 方法是根据参数 `sel`，分解出选择器、伪类名和伪类参数（如 `eq` 、 `has` 的参数），根据伪类来选择对应的 `filter` ，传递给回调函数 `fn` 。
+
+分解参数最主要靠的是 `filterRe` 这条正则，正则太过复杂，我也不太懂，很难解释，不过用正则可视化网站 [regexper.com](https://regexper.com)，可以很清晰地看到，正则分成三大组，第一组匹配的是 `:` 前面的选择器，第二组匹配的是伪类名，第三组匹配的是伪类参数。
+
+```javascript
+sel = sel.replace(/=#\]/g, '="#"]')
+```
+
+这段是处理 `a[href^=#]` 的情况，其实就是将 `#` 包在 `""` 里面，以符合标准的属性选择器，这是 `Zepto` 的容错能力。 这个选择器不会匹配到 `filters` 上的过滤函数，最后调用的是 `querySelectorAll` 方法，具体见《[读Zepto源码之神奇的$](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E7%A5%9E%E5%A5%87%E7%9A%84%24.md)》对 `qsa` 函数的分析。
+
+```javascript
+if (match && match[2] in filters) {
+  filter = filters[match[2]], arg = match[3]
+  sel = match[1]
+  ...
+}
+```
+
+`match[2]` 也即第二组匹配的是伪类名，也是对应 `filters` 中的 `key` 值，伪类名存在于 `filters` 中时，则将选择器，伪类名和伪类参数存入对应的变量。
+
+```javascript
+if (arg) {
+  var num = Number(arg)
+  if (isNaN(num)) arg = arg.replace(/^["']|["']$/g, '')
+  else arg = num
+}
+```
+
+如果伪类的参数不可以用 `Number` 转换，则参数为字符串，用正则将字符串前后的 `"` 或 `'` 去掉，再赋值给 `arg`.
+
+```javascript
+return fn(sel, filter, arg)
+```
+
+最后执行回调，将解释出来的参数传入回调函数中，将执行结果返回。
 
 ## 系列文章
 
