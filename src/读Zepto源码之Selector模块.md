@@ -181,7 +181,20 @@ return !filter ? nodes :
 
 如果没有过滤器，则将所有元素返回，如果存在过滤器，则遍历集合，调用对应的过滤器获取元素，并将新集合的元素去重。
 
+### matches
 
+```javascript
+zepto.matches = function(node, selector){
+  return process(selector, function(sel, filter, arg){
+    return (!sel || oldMatches(node, sel)) &&
+      (!filter || filter.call(node, null, arg) === node)
+  })
+}
+```
+
+`matches` 也是调用 `process` 方法，这里很巧妙地用了 `||` 和 `&&` 的短路操作。
+
+其实要做的事情就是，如果可以用 `oldMatches` 匹配，则使用 `oldMatches` 匹配的结果，否则使用过滤器过滤出来的结果。
 
 ## 系列文章
 
