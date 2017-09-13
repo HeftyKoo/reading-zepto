@@ -111,6 +111,78 @@ return fn(sel, filter, arg)
 
 最后执行回调，将解释出来的参数传入回调函数中，将执行结果返回。
 
+## 重写的方法
+
+###qsa
+
+```javascript
+var zepto = $.zepto, oldQsa = zepto.qsa, oldMatches = zepto.matches，
+	childRe  = /^\s*>/,
+    classTag = 'Zepto' + (+new Date())
+
+zepto.qsa = function(node, selector) {
+  return process(selector, function(sel, filter, arg){
+    try {
+      var taggedParent
+      if (!sel && filter) sel = '*'
+      else if (childRe.test(sel))
+        taggedParent = $(node).addClass(classTag), sel = '.'+classTag+' '+sel
+
+      var nodes = oldQsa(node, sel)
+      } catch(e) {
+        console.error('error performing selector: %o', selector)
+        throw e
+      } finally {
+        if (taggedParent) taggedParent.removeClass(classTag)
+      }
+    return !filter ? nodes :
+    zepto.uniq($.map(nodes, function(n, i){ return filter.call(n, i, nodes, arg) }))
+  })
+}
+```
+
+改过的 `qsa` 调用的是 `process` 方法，在回调函数中处理大部分逻辑。
+
+思路是通过选择器获取到所有节点，然后再调用对应伪类的对应方法来过滤出符合条件的节点。
+
+#### 处理选择器，根据选择器获取节点
+
+```javascript
+var taggedParent
+if (!sel && filter) sel = '*'
+else if (childRe.test(sel))
+  taggedParent = $(node).addClass(classTag), sel = '.'+classTag+' '+sel
+
+var nodes = oldQsa(node, sel)
+```
+
+如果选择器和过滤器都不存在，则将 `sel` 设置 `*` ，即获取所有元素。
+
+如果 `>sel` 形式的选择器，查找所有子元素。
+
+这里的做法是，向元素 `node` 中添加唯一的样式名 `classTag`，然后用唯一样式名和选择器拼接成子元素选择器。
+
+最后调用原有的 `qsa` 函数 `oldQsa`  来获取符合选择器的所有元素。
+
+#### 清理所添加的样式
+
+```javascript
+if (taggedParent) taggedParent.removeClass(classTag)
+```
+
+如果存在 `taggedParent` ，则将元素上的 `classTag` 清理掉。
+
+#### 调用对应的过滤器，过滤元素
+
+```javascript
+return !filter ? nodes :
+	zepto.uniq($.map(nodes, function(n, i){ return filter.call(n, i, nodes, arg) }))
+```
+
+如果没有过滤器，则将所有元素返回，如果存在过滤器，则遍历集合，调用对应的过滤器获取元素，并将新集合的元素去重。
+
+
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
