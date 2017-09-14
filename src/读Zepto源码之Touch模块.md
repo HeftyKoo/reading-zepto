@@ -162,9 +162,50 @@ $(document).ready(function(){
 
 先来说明几个变量，`now` 用来保存当前时间， `delta` 用来保存两次触摸之间的时间差， `deltaX` 用来保存 `x轴` 上的位移， `deltaY` 来用保存 `y轴` 上的位移， `firstTouch` 保存初始触摸点的信息， `_isPointerType` 保存是否为 `pointerEvent` 的判断结果。
 
-从上面可以看到， `Zepto` 所触发的事件，是从 `touch` 或者 `pointer` 事件中，根据不同情况来计算出来的。这些事件都绑定在 `document` 上。
+从上面可以看到， `Zepto` 所触发的事件，是从 `touch` 、 `pointer` 或者 IE 的 `guesture` 事件中，根据不同情况来计算出来的。这些事件都绑定在 `document` 上。
 
+### IE Gesture 事件的处理
 
+`IE` 的手势使用，需要经历三步：
+
+1. 创建手势对象
+2. 指定目标元素
+3. 指定手势识别时需要处理的指针
+
+```javascript
+if ('MSGesture' in window) {
+  gesture = new MSGesture()
+  gesture.target = document.body
+}
+```
+
+这段代码包含了前两步。
+
+```javascript
+on('touchstart MSPointerDown pointerdown', function(e){
+  ...
+  if (gesture && _isPointerType) gesture.addPointer(e.pointerId)
+}
+```
+
+这段是第三步，用 `addPointer` 的方法，指定需要处理的指针。
+
+```javascript
+bind('MSGestureEnd', function(e){
+  var swipeDirectionFromVelocity =
+      e.velocityX > 1 ? 'Right' : e.velocityX < -1 ? 'Left' : e.velocityY > 1 ? 'Down' : e.velocityY < -1 ? 'Up' : null
+  if (swipeDirectionFromVelocity) {
+    touch.el.trigger('swipe')
+    touch.el.trigger('swipe'+ swipeDirectionFromVelocity)
+  }
+})
+```
+
+接下来就是分析手势了，`Gesture` 里只处理 `swipe` 事件。
+
+`velocityX` 和 `velocityY` 分别为 `x轴` 和 `y轴` 上的速率。这里以 `1`  或 `-1` 为临界点，判断 `swipe` 的方法。
+
+如果 `swipe` 的方向存在，则触发 `swipe` 事件，同时也触发带方法的 `swipe` 事件。
 
 
 ## 系列文章
