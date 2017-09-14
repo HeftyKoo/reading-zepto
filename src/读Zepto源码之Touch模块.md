@@ -131,7 +131,40 @@ function isPointerEventType(e, type){
 
 触发的是否为 `pointerEvent` 。
 
- 做了 `IE` 的兼容。
+在低版本的移动端 IE 浏览器中，只实现了 `PointerEvent` ，并没有实现 `TouchEvent` ，所以需要这个来判断。
+
+## 事件触发
+
+### 整体分析
+
+```javascript
+$(document).ready(function(){
+    var now, delta, deltaX = 0, deltaY = 0, firstTouch, _isPointerType
+
+    $(document)
+      .bind('MSGestureEnd', function(e){
+        ...
+      })
+      .on('touchstart MSPointerDown pointerdown', function(e){
+        ...
+      })
+      .on('touchmove MSPointerMove pointermove', function(e){
+        ...
+      })
+      .on('touchend MSPointerUp pointerup', function(e){
+        ...
+      })
+      
+      .on('touchcancel MSPointerCancel pointercancel', cancelAll)
+
+    $(window).on('scroll', cancelAll)
+```
+
+先来说明几个变量，`now` 用来保存当前时间， `delta` 用来保存两次触摸之间的时间差， `deltaX` 用来保存 `x轴` 上的位移， `deltaY` 来用保存 `y轴` 上的位移， `firstTouch` 保存初始触摸点的信息， `_isPointerType` 保存是否为 `pointerEvent` 的判断结果。
+
+从上面可以看到， `Zepto` 所触发的事件，是从 `touch` 或者 `pointer` 事件中，根据不同情况来计算出来的。这些事件都绑定在 `document` 上。
+
+
 
 
 ## 系列文章
@@ -167,6 +200,7 @@ function isPointerEventType(e, type){
 * [一步一步DIY zepto库，研究zepto源码8--touch模块](https://zrysmt.github.io/2017/04/28/%E4%B8%80%E6%AD%A5%E4%B8%80%E6%AD%A5DIY%20zepto%E5%BA%93%EF%BC%8C%E7%A0%94%E7%A9%B6zepto%E6%BA%90%E7%A0%818--touch%E6%A8%A1%E5%9D%97/)
 * [zepto源码学习-06 touch](https://www.bbsmax.com/A/Vx5M9nPv5N/)
 * [zepto源码之touch.js](http://blog.h5min.cn/u013055396/article/details/76606048)
+* [addPointer method](https://msdn.microsoft.com/en-us/library/hh968251(v=vs.85).aspx)
 
 ## License
 
