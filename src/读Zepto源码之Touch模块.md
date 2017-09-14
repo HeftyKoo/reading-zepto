@@ -74,7 +74,22 @@ function longTap() {
 
 在触发 `longTap` 事件前，先将保存定时器的变量 `longTapTimeout` 释放，如果 `touch` 对象中存在 `last` ，则触发 `longTap` 事件， `last` 保存的是最后触摸的时间。最后将 `touch` 重置为空对象，以便下一次使用。
 
+### cancelLongTap
 
+```javascript
+function cancelLongTap() {
+  if (longTapTimeout) clearTimeout(longTapTimeout)
+  longTapTimeout = null
+}
+```
+
+撤销 `longTap` 事件的触发。
+
+如果有触发 `longTap` 的定时器，清除定时器即可阻止 `longTap` 事件的触发。
+
+最后同样需要将 `longTapTimeout` 变量置为 `null` ，等待垃圾回收。
+
+ 
 
 ## 系列文章
 
