@@ -52,6 +52,28 @@ function swipeDirection(x1, x2, y1, y2) {
 
 在 `y轴` 上，如果起点位置比终点位置大，则为向上滑动，返回 `Up` ，否则为向下滑动，返回 `Down` 。
 
+### longTap
+
+```javascript
+var touch = {},
+    touchTimeout, tapTimeout, swipeTimeout, longTapTimeout,
+    longTapDelay = 750,
+    gesture
+function longTap() {
+  longTapTimeout = null
+  if (touch.last) {
+    touch.el.trigger('longTap')
+    touch = {}
+  }
+}
+```
+
+触发长按事件。
+
+`touch` 对象保存的是触摸过程中的信息。
+
+在触发 `longTap` 事件前，先将保存定时器的变量 `longTapTimeout` 释放，如果 `touch` 对象中存在 `last` ，则触发 `longTap` 事件， `last` 保存的是最后触摸的时间。最后将 `touch` 重置为空对象，以便下一次使用。
+
 
 
 ## 系列文章
