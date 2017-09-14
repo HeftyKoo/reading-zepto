@@ -89,7 +89,22 @@ function cancelLongTap() {
 
 最后同样需要将 `longTapTimeout` 变量置为 `null` ，等待垃圾回收。
 
- 
+### cancelAll
+
+```javascript
+function cancelAll() {
+  if (touchTimeout) clearTimeout(touchTimeout)
+  if (tapTimeout) clearTimeout(tapTimeout)
+  if (swipeTimeout) clearTimeout(swipeTimeout)
+  if (longTapTimeout) clearTimeout(longTapTimeout)
+  touchTimeout = tapTimeout = swipeTimeout = longTapTimeout = null
+  touch = {}
+}
+```
+
+ 清除所有事件的执行。
+
+其实就是清除所有相关的定时器，最后将 `touch` 对象设置为 `null` 。
 
 ## 系列文章
 
