@@ -207,6 +207,46 @@ bind('MSGestureEnd', function(e){
 
 如果 `swipe` 的方向存在，则触发 `swipe` 事件，同时也触发带方法的 `swipe` 事件。
 
+### start
+
+```javascript
+on('touchstart MSPointerDown pointerdown', function(e){
+  if((_isPointerType = isPointerEventType(e, 'down')) &&
+     !isPrimaryTouch(e)) return
+  firstTouch = _isPointerType ? e : e.touches[0]
+  if (e.touches && e.touches.length === 1 && touch.x2) {
+    touch.x2 = undefined
+    touch.y2 = undefined
+  }
+  now = Date.now()
+  delta = now - (touch.last || now)
+  touch.el = $('tagName' in firstTouch.target ?
+               firstTouch.target : firstTouch.target.parentNode)
+  touchTimeout && clearTimeout(touchTimeout)
+  touch.x1 = firstTouch.pageX
+  touch.y1 = firstTouch.pageY
+  if (delta > 0 && delta <= 250) touch.isDoubleTap = true
+  touch.last = now
+  longTapTimeout = setTimeout(longTap, longTapDelay)
+  if (gesture && _isPointerType) gesture.addPointer(e.pointerId)
+})
+```
+
+#### 过滤掉非触屏事件
+
+```javascript
+if((_isPointerType = isPointerEventType(e, 'down')) &&
+   !isPrimaryTouch(e)) return
+firstTouch = _isPointerType ? e : e.touches[0]
+```
+
+这里还将 `isPointerEventType` 的判断结果保存到了 `_isPointerType` 中，用来判断是否为 `PointerEvent` 。
+
+这里的判断其实就是只接近 `PointerEvent` 和 `TouchEvent` ，并且 `TouchEvent` 的 `isPrimary` 必须为 `true` 。
+
+因为 `TouchEvent` 支持多点触碰，这里只取触碰的第一点存入 `firstTouch` 变量。
+
+
 
 ## 系列文章
 
