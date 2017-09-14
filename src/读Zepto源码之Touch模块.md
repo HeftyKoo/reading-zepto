@@ -120,6 +120,19 @@ function isPrimaryTouch(event){
 
 当 `pointerType` 为 `touch` 并且 `isPrimary` 为 `true` 时，才为主触点。 `pointerType` 可为 `touch` 、 `pen` 和 `mouse` ，这里只处理手指触摸的情况。
 
+### isPointerEventType
+
+```javascript
+function isPointerEventType(e, type){
+  return (e.type == 'pointer'+type ||
+          e.type.toLowerCase() == 'mspointer'+type)
+}
+```
+
+触发的是否为 `pointerEvent` 。
+
+ 做了 `IE` 的兼容。
+
 
 ## 系列文章
 
