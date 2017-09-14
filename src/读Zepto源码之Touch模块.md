@@ -8,6 +8,31 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## 实现的事件
+
+```javascript
+;['swipe', 'swipeLeft', 'swipeRight', 'swipeUp', 'swipeDown',
+  'doubleTap', 'tap', 'singleTap', 'longTap'].forEach(function(eventName){
+  $.fn[eventName] = function(callback){ return this.on(eventName, callback) }
+})
+```
+
+从上面的代码中可以看到，`Zepto` 实现了以下的事件：
+
+* swipe: 滑动事件
+* swipeLeft: 向左滑动事件
+* swipeRight: 向右滑动事件
+* swipeUp: 向上滑动事件
+* swipeDown: 向下滑动事件
+* doubleTap: 屏幕双击事件
+* tap: 屏幕点击事件，比 `click` 事件响应更快
+* singleTap: 屏幕单击事件
+* longTap: 长按事件
+
+并且为每个事件都注册了快捷方法。
+
+
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
