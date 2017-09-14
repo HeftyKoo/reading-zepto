@@ -106,6 +106,21 @@ function cancelAll() {
 
 其实就是清除所有相关的定时器，最后将 `touch` 对象设置为 `null` 。
 
+### isPrimaryTouch
+
+```javascript
+function isPrimaryTouch(event){
+  return (event.pointerType == 'touch' ||
+          event.pointerType == event.MSPOINTER_TYPE_TOUCH)
+  && event.isPrimary
+}
+```
+
+是否为主触点。
+
+当 `pointerType` 为 `touch` 并且 `isPrimary` 为 `true` 时，才为主触点。 `pointerType` 可为 `touch` 、 `pen` 和 `mouse` ，这里只处理手指触摸的情况。
+
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
