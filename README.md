@@ -1,5 +1,9 @@
 # 读 Zepto 源码系列
 
+## GitBook
+
+[gitbook地址](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
