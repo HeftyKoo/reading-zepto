@@ -291,7 +291,16 @@ if (delta > 0 && delta <= 250) touch.isDoubleTap = true
 
 可以很清楚地看到， `Zepto` 将两次点击之间的时间间隔小于 `250ms` 时，作为 `doubleTap` 事件处理，将 `isDoubleTap` 设置为 `true` 。
 
+### 长按事件
 
+```javascript
+touch.last = now
+longTapTimeout = setTimeout(longTap, longTapDelay)
+```
+
+将 `touch.last` 设置为当前时间。这样就可以记录两次点击时的时间差了。
+
+同时开始长按事件定时器，从上面的代码可以看到，长按事件会在 `750ms` 后触发。
 
 ## 系列文章
 
