@@ -8,6 +8,39 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## 整体结构
+
+```javascript
+;(function($){
+  if ($.os.ios) {
+    var gesture = {}, gestureTimeout
+
+    $(document).bind('gesturestart', function(e){
+     ...
+    }).bind('gesturechange', function(e){
+      ...
+    }).bind('gestureend', function(e){
+     ...
+    })
+
+    ;['pinch', 'pinchIn', 'pinchOut'].forEach(function(m){
+      $.fn[m] = function(callback){ return this.bind(m, callback) }
+    })
+  }
+})(Zepto)
+
+```
+
+注意这里有个判断 `$.os.ios` ，用来判断是否为 `ios` 。这个判断需要引入设备侦测模块 `Detect` 。这个模块利用 `userAgent` 来进行设备侦测，里面是一大堆正则表达式，所以这个模块后面是不打算分析的了。
+
+然后是监测 `gesturestart` 、`gesturechange`、 `gestureend` 事件，根据这三个事件，可以组合出 `pinch` 、`pinchIn` 和 `pinchOut` 事件。其实就是缩小和放大的手势操作。
+
+其中变量 `gesture` 对象和 `Touch` 模块中的 `touch` 对象的作用差不多，可以先看看 《[读Zepto源码之Touch模块](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8BTouch%E6%A8%A1%E5%9D%97.md)》对 `Touch` 模块的分析。
+
+
+
+
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
@@ -32,7 +65,7 @@
 
 ## 参考
 
-
+* [指尖下的js —— 多触式web前端开发之三：处理复杂手势](http://www.cnblogs.com/pifoo/archive/2011/05/22/webkit-touch-event-3.html)
 
 ## License
 
