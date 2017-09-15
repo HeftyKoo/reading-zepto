@@ -461,7 +461,15 @@ touchTimeout = setTimeout(function(){
 
 在接受到 `cancel` 事件时，调用 `cancelAll` 方法，取消所有事件的触发。
 
+### scroll
 
+```javascript
+$(window).on('scroll', cancelAll)
+```
+
+从前面的分析可以看到，所有的事件触发都是异步的。
+
+因为在 `scroll` 的时候，肯定是只想响应滚动的事件，异步触发是为了在 `scroll` 的过程中，可以将事件取消。
 
 ## 系列文章
 
