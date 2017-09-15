@@ -283,6 +283,14 @@ touch.y1 = firstTouch.pageY
 
 `touch.x1` 和 `touch.y1` 分别保存 `x轴` 坐标和 `y轴` 坐标。
 
+### 双击事件
+
+```javascript
+if (delta > 0 && delta <= 250) touch.isDoubleTap = true
+```
+
+可以很清楚地看到， `Zepto` 将两次点击之间的时间间隔小于 `250ms` 时，作为 `doubleTap` 事件处理，将 `isDoubleTap` 设置为 `true` 。
+
 
 
 ## 系列文章
