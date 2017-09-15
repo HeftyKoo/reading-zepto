@@ -397,6 +397,39 @@ if ((touch.x2 && Math.abs(touch.x1 - touch.x2) > 30) ||
 
 注意，`swipe` 事件并不是在 `end` 系列事件触发时立即触发的，而是设置了一个 `0ms` 的定时器，让事件异步触发，这个有什么用呢？后面会讲到。
 
+#### tap
+
+```javascript
+else if ('last' in touch)
+  
+  if (deltaX < 30 && deltaY < 30) {
+
+    tapTimeout = setTimeout(function() {
+
+      var event = $.Event('tap')
+      event.cancelTouch = cancelAll
+
+      if (touch.el) touch.el.trigger(event)
+
+    }, 0)
+  } else {
+    touch = {}
+  }
+deltaX = deltaY = 0
+```
+
+终于看到重点了，首先判断 `last` 是否存在，从 `start` 中可以看到，如果触发了 `start` ， `last` 肯定是存在的，但是如果触发了长按事件，`touch` 对象会被清空，这时不会再触发 `tap` 事件。
+
+如果不是 `swipe` 事件，也不存在 `last` ，则只将 `touch` 清空，不触发任何事件。
+
+在最后会将 `deltaX` 和 `deltaY` 重置为 `0` 。
+
+触发 `tap` 事件时，会在 `event` 中加了 `cancelTouch` 方法，外界可以通过这个方法取消所有事件的执行。
+
+这里同样用了 `setTimeout` 异步触发事件。
+
+
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
