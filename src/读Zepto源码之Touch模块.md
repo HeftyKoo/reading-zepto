@@ -246,6 +246,21 @@ firstTouch = _isPointerType ? e : e.touches[0]
 
 因为 `TouchEvent` 支持多点触碰，这里只取触碰的第一点存入 `firstTouch` 变量。
 
+### 重置终点坐标
+
+```javascript
+if (e.touches && e.touches.length === 1 && touch.x2) {
+  touch.x2 = undefined
+  touch.y2 = undefined
+}
+```
+
+如果还需要记录，终点坐标是需要更新的。
+
+正常情况下，`touch` 对象会在 `touchEnd` 或者 `cancel` 的时候清空，但是如果用户自己调用了 `preventDefault` 等，就可能会出现没有清空的情况。
+
+这里有一点不太明白，为什么只会在 `touches` 单点操作的时候才清空呢？多个触碰点的时候不需要清空吗？
+
 
 
 ## 系列文章
