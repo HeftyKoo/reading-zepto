@@ -441,7 +441,17 @@ if (touch.isDoubleTap) {
 
 因此，可以知道，在触发 `doubleTap` 事件之前会触发两次 `tap` 事件。
 
+#### singleTap
 
+```javascript
+touchTimeout = setTimeout(function(){
+  touchTimeout = null
+  if (touch.el) touch.el.trigger('singleTap')
+  touch = {}
+}, 250)
+```
+
+如果不是 `doubleTap` ，会在 `tap` 事件触发的 `250ms` 后，触发 `singleTap` 事件。
 
 ## 系列文章
 
