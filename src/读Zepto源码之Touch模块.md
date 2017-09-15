@@ -453,6 +453,16 @@ touchTimeout = setTimeout(function(){
 
 如果不是 `doubleTap` ，会在 `tap` 事件触发的 `250ms` 后，触发 `singleTap` 事件。
 
+### cancel
+
+```javascript
+.on('touchcancel MSPointerCancel pointercancel', cancelAll)
+```
+
+在接受到 `cancel` 事件时，调用 `cancelAll` 方法，取消所有事件的触发。
+
+
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
