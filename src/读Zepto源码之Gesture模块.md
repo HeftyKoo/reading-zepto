@@ -72,6 +72,24 @@ bind('gesturechange', function(e){
 
 在 `gesturechange` 时，更新终点 `guesture.e2` 的缩放值。
 
+### gestureend
+
+```javascript
+if (gesture.e2 > 0) {
+  Math.abs(gesture.e1 - gesture.e2) != 0 && $(gesture.target).trigger('pinch') &&
+    $(gesture.target).trigger('pinch' + (gesture.e1 - gesture.e2 > 0 ? 'In' : 'Out'))
+  gesture.e1 = gesture.e2 = gesture.last = 0
+} else if ('last' in gesture) {
+  gesture = {}
+}
+```
+
+如果 `gesture.e2` 存在（不可能有小于 `0` 的情况吧？），在起点的缩放值和终点的缩放值不相同的情况下，触发 `pinch` 事件；如果起点的缩放值比终点的缩放值大，则继续触发 `pinchIn` 事件，则缩小效果；如果起点的缩放值比终点的缩放值小，则继续触发 `pinchOut` 事件，即放大效果。
+
+最终将 `e1` 、 `e2`  和 `last` 都设置为 `0` 。
+
+在 `last` 不存在的情况下（在调用 `preventDefault` 时），将 `gesture` 清空。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
