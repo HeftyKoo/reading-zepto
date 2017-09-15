@@ -37,9 +37,14 @@
 
 其中变量 `gesture` 对象和 `Touch` 模块中的 `touch` 对象的作用差不多，可以先看看 《[读Zepto源码之Touch模块](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8BTouch%E6%A8%A1%E5%9D%97.md)》对 `Touch` 模块的分析。
 
+## parentIfText
 
-
-
+```javascript
+function parentIfText(node){
+  return 'tagName' in node ? node : node.parentNode
+}
+```
+这个辅助方法是获取目标节点，如果节点不是元素节点，则用父节点作为目标节点。如果事件在文本节点或者伪类元素上触发时，会出现不是元素节点的情况。
 
 ## 系列文章
 
