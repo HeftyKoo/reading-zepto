@@ -261,6 +261,28 @@ if (e.touches && e.touches.length === 1 && touch.x2) {
 
 这里有一点不太明白，为什么只会在 `touches` 单点操作的时候才清空呢？多个触碰点的时候不需要清空吗？
 
+### 记录触碰点的信息
+
+```javascript
+now = Date.now()
+delta = now - (touch.last || now)
+touch.el = $('tagName' in firstTouch.target ?
+             firstTouch.target : firstTouch.target.parentNode)
+touchTimeout && clearTimeout(touchTimeout)
+touch.x1 = firstTouch.pageX
+touch.y1 = firstTouch.pageY
+```
+
+`now` 用来保存当前时间。
+
+`delta` 用来保存两次点击时的时间间隔，用来处理双击事件。
+
+`touch.el` 用来保存目标元素，这里有个判断，如果 `target` 不是标签节点时，取父节点作为目标元素。这会在点击伪类元素时出现。
+
+如果 `touchTimeout` 存在，则清除定时器，避免重复触发。
+
+`touch.x1` 和 `touch.y1` 分别保存 `x轴` 坐标和 `y轴` 坐标。
+
 
 
 ## 系列文章
