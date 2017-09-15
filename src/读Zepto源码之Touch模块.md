@@ -246,7 +246,7 @@ firstTouch = _isPointerType ? e : e.touches[0]
 
 因为 `TouchEvent` 支持多点触碰，这里只取触碰的第一点存入 `firstTouch` 变量。
 
-### 重置终点坐标
+#### 重置终点坐标
 
 ```javascript
 if (e.touches && e.touches.length === 1 && touch.x2) {
@@ -261,7 +261,7 @@ if (e.touches && e.touches.length === 1 && touch.x2) {
 
 这里有一点不太明白，为什么只会在 `touches` 单点操作的时候才清空呢？多个触碰点的时候不需要清空吗？
 
-### 记录触碰点的信息
+#### 记录触碰点的信息
 
 ```javascript
 now = Date.now()
@@ -283,7 +283,7 @@ touch.y1 = firstTouch.pageY
 
 `touch.x1` 和 `touch.y1` 分别保存 `x轴` 坐标和 `y轴` 坐标。
 
-### 双击事件
+#### 双击事件
 
 ```javascript
 if (delta > 0 && delta <= 250) touch.isDoubleTap = true
@@ -291,7 +291,7 @@ if (delta > 0 && delta <= 250) touch.isDoubleTap = true
 
 可以很清楚地看到， `Zepto` 将两次点击之间的时间间隔小于 `250ms` 时，作为 `doubleTap` 事件处理，将 `isDoubleTap` 设置为 `true` 。
 
-### 长按事件
+#### 长按事件
 
 ```javascript
 touch.last = now
@@ -301,6 +301,26 @@ longTapTimeout = setTimeout(longTap, longTapDelay)
 将 `touch.last` 设置为当前时间。这样就可以记录两次点击时的时间差了。
 
 同时开始长按事件定时器，从上面的代码可以看到，长按事件会在 `750ms` 后触发。
+
+### move
+
+```javascript
+on('touchmove MSPointerMove pointermove', function(e){
+  if((_isPointerType = isPointerEventType(e, 'move')) &&
+     !isPrimaryTouch(e)) return
+  firstTouch = _isPointerType ? e : e.touches[0]
+  cancelLongTap()
+  touch.x2 = firstTouch.pageX
+  touch.y2 = firstTouch.pageY
+
+  deltaX += Math.abs(touch.x1 - touch.x2)
+  deltaY += Math.abs(touch.y1 - touch.y2)
+})
+```
+
+`move` 事件处理了两件事，一是记录终点坐标，一是计算起点到终点之间的位移。
+
+要注意这里还调用了 `cancelLongTap` 清除了长按定时器，避免长按事件的触发。因为有移动，肯定就不是长按了。
 
 ## 系列文章
 
