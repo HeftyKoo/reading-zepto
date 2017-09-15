@@ -2,7 +2,7 @@
 
 ## GitBook
 
-[gitbook地址](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
 
 ## 系列文章
 
