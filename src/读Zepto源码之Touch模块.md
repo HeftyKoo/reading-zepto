@@ -428,6 +428,19 @@ deltaX = deltaY = 0
 
 这里同样用了 `setTimeout` 异步触发事件。
 
+#### doubleTap
+
+```javascript
+if (touch.isDoubleTap) {
+  if (touch.el) touch.el.trigger('doubleTap')
+  touch = {}
+}
+```
+
+这个 `isDoubleTap` 在 `start` 时确定的，上面已经分析过了，在 `end` 的时候触发 `doubleTap` 事件。
+
+因此，可以知道，在触发 `doubleTap` 事件之前会触发两次 `tap` 事件。
+
 
 
 ## 系列文章
