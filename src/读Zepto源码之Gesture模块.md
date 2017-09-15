@@ -60,11 +60,17 @@ bind('gesturestart', function(e){
 })
 ```
 
-如 `Touch` 模块一样，在 `start` 时，也用 `delta` 来记录两次 `start` 之间的时间间隔，用 `gesture.target` 来保存目标元素，`e1` 是起点时的缩放。
+如 `Touch` 模块一样，在 `gesturestart` 时，也用 `delta` 来记录两次 `start` 之间的时间间隔，用 `gesture.target` 来保存目标元素，`e1` 是起点时的缩放值。
 
+### gesturechange
 
+```javascript
+bind('gesturechange', function(e){
+  gesture.e2 = e.scale
+})
+```
 
-
+在 `gesturechange` 时，更新终点 `guesture.e2` 的缩放值。
 
 ## 系列文章
 
