@@ -46,6 +46,26 @@ function parentIfText(node){
 ```
 这个辅助方法是获取目标节点，如果节点不是元素节点，则用父节点作为目标节点。如果事件在文本节点或者伪类元素上触发时，会出现不是元素节点的情况。
 
+## 事件
+
+### gesturestart
+
+```javascript
+bind('gesturestart', function(e){
+  var now = Date.now(), delta = now - (gesture.last || now)
+  gesture.target = parentIfText(e.target)
+  gestureTimeout && clearTimeout(gestureTimeout)
+  gesture.e1 = e.scale
+  gesture.last = now
+})
+```
+
+如 `Touch` 模块一样，在 `start` 时，也用 `delta` 来记录两次 `start` 之间的时间间隔，用 `gesture.target` 来保存目标元素，`e1` 是起点时的缩放。
+
+
+
+
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
