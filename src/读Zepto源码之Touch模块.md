@@ -102,7 +102,7 @@ function cancelAll() {
 }
 ```
 
- 清除所有事件的执行。
+清除所有事件的执行。
 
 其实就是清除所有相关的定时器，最后将 `touch` 对象设置为 `null` 。
 
@@ -162,7 +162,7 @@ $(document).ready(function(){
 
 先来说明几个变量，`now` 用来保存当前时间， `delta` 用来保存两次触摸之间的时间差， `deltaX` 用来保存 `x轴` 上的位移， `deltaY` 来用保存 `y轴` 上的位移， `firstTouch` 保存初始触摸点的信息， `_isPointerType` 保存是否为 `pointerEvent` 的判断结果。
 
-从上面可以看到， `Zepto` 所触发的事件，是从 `touch` 、 `pointer` 或者 IE 的 `guesture` 事件中，根据不同情况来计算出来的。这些事件都绑定在 `document` 上。
+从上面可以看到， `Zepto` 所触发的事件，是从 `touch` 、 `pointer` 或者 IE 的 `guesture` 事件中，根据不同情况计算出来的。这些事件都绑定在 `document` 上。
 
 ### IE Gesture 事件的处理
 
@@ -203,9 +203,9 @@ bind('MSGestureEnd', function(e){
 
 接下来就是分析手势了，`Gesture` 里只处理 `swipe` 事件。
 
-`velocityX` 和 `velocityY` 分别为 `x轴` 和 `y轴` 上的速率。这里以 `1`  或 `-1` 为临界点，判断 `swipe` 的方法。
+`velocityX` 和 `velocityY` 分别为 `x轴` 和 `y轴` 上的速率。这里以 `1`  或 `-1` 为临界点，判断 `swipe` 的方向。
 
-如果 `swipe` 的方向存在，则触发 `swipe` 事件，同时也触发带方法的 `swipe` 事件。
+如果 `swipe` 的方向存在，则触发 `swipe` 事件，同时也触发带方向的 `swipe` 事件。
 
 ### start
 
@@ -242,7 +242,7 @@ firstTouch = _isPointerType ? e : e.touches[0]
 
 这里还将 `isPointerEventType` 的判断结果保存到了 `_isPointerType` 中，用来判断是否为 `PointerEvent` 。
 
-这里的判断其实就是只接近 `PointerEvent` 和 `TouchEvent` ，并且 `TouchEvent` 的 `isPrimary` 必须为 `true` 。
+这里的判断其实就是只处理 `PointerEvent` 和 `TouchEvent` ，并且 `TouchEvent` 的 `isPrimary` 必须为 `true` 。
 
 因为 `TouchEvent` 支持多点触碰，这里只取触碰的第一点存入 `firstTouch` 变量。
 
@@ -289,7 +289,7 @@ touch.y1 = firstTouch.pageY
 if (delta > 0 && delta <= 250) touch.isDoubleTap = true
 ```
 
-可以很清楚地看到， `Zepto` 将两次点击之间的时间间隔小于 `250ms` 时，作为 `doubleTap` 事件处理，将 `isDoubleTap` 设置为 `true` 。
+可以很清楚地看到， `Zepto` 将两次点击的时间间隔小于 `250ms` 时，作为 `doubleTap` 事件处理，将 `isDoubleTap` 设置为 `true` 。
 
 #### 长按事件
 
@@ -469,7 +469,7 @@ $(window).on('scroll', cancelAll)
 
 从前面的分析可以看到，所有的事件触发都是异步的。
 
-因为在 `scroll` 的时候，肯定是只想响应滚动的事件，异步触发是为了在 `scroll` 的过程中，可以将事件取消。
+因为在 `scroll` 的时候，肯定是只想响应滚动的事件，异步触发是为了在 `scroll` 的过程中和外界调用 `cancelTouch` 方法时， 可以将事件取消。
 
 ## 系列文章
 
