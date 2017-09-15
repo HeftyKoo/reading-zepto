@@ -322,6 +322,81 @@ on('touchmove MSPointerMove pointermove', function(e){
 
 要注意这里还调用了 `cancelLongTap` 清除了长按定时器，避免长按事件的触发。因为有移动，肯定就不是长按了。
 
+### end
+
+```javascript
+on('touchend MSPointerUp pointerup', function(e){
+  if((_isPointerType = isPointerEventType(e, 'up')) &&
+     !isPrimaryTouch(e)) return
+  cancelLongTap()
+
+  if ((touch.x2 && Math.abs(touch.x1 - touch.x2) > 30) ||
+      (touch.y2 && Math.abs(touch.y1 - touch.y2) > 30))
+
+    swipeTimeout = setTimeout(function() {
+      if (touch.el){
+        touch.el.trigger('swipe')
+        touch.el.trigger('swipe' + (swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2)))
+      }
+      touch = {}
+    }, 0)
+
+  else if ('last' in touch)
+  
+    if (deltaX < 30 && deltaY < 30) {
+    
+      tapTimeout = setTimeout(function() {
+        
+        var event = $.Event('tap')
+        event.cancelTouch = cancelAll
+        
+        if (touch.el) touch.el.trigger(event)
+
+        if (touch.isDoubleTap) {
+          if (touch.el) touch.el.trigger('doubleTap')
+          touch = {}
+        }
+
+        else {
+          touchTimeout = setTimeout(function(){
+            touchTimeout = null
+            if (touch.el) touch.el.trigger('singleTap')
+            touch = {}
+          }, 250)
+        }
+      }, 0)
+    } else {
+      touch = {}
+    }
+  deltaX = deltaY = 0
+
+})
+```
+
+#### swipe
+
+```javascript
+cancelLongTap()
+if ((touch.x2 && Math.abs(touch.x1 - touch.x2) > 30) ||
+    (touch.y2 && Math.abs(touch.y1 - touch.y2) > 30))
+
+  swipeTimeout = setTimeout(function() {
+    if (touch.el){
+      touch.el.trigger('swipe')
+      touch.el.trigger('swipe' + (swipeDirection(touch.x1, touch.x2, touch.y1, touch.y2)))
+    }
+    touch = {}
+  }, 0)
+```
+
+进入 `end` 时，立刻清除 `longTap` 定时器的执行。
+
+可以看到，起点和终点的距离超过 `30` 时，会被判定为 `swipe` 滑动事件。
+
+在触发完 `swipe` 事件后，立即触发对应方向上的 `swipe` 事件。
+
+注意，`swipe` 事件并不是在 `end` 系列事件触发时立即触发的，而是设置了一个 `0ms` 的定时器，让事件异步触发，这个有什么用呢？后面会讲到。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
