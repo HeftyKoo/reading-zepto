@@ -70,7 +70,26 @@ if (Array.prototype.reduce === undefined)
   * array: 调用 `reduce` 的数组
 * initialValue: 初始值，如果没有提供，则为数组的第一项。如果数组为空数组，而又没有提供初始值时，会报错
 
+### 检测参数
 
+```javascript
+if(this === void 0 || this === null) throw new TypeError()
+var t = Object(this), len = t.length >>> 0, k = 0, accumulator
+if(typeof fun != 'function') throw new TypeError()
+if(len == 0 && arguments.length == 1) throw new TypeError()
+```
+
+首先检测是否为 `undefined` 或者 `null` ，如果是，则报类型错误。这里有一点值得注意的，判断是否为 `undefined` 时，用了 `void 0` 的返回值，因为 `void` 操作符返回的结果都为 `undefined` ，这是为了避免 `undefined` 被重新赋值，出现误判的情况。
+
+接下来，将数组转换成对象，用变量 `t` 来保存，后面会看到，遍历用的是 `for...in` 来处理。为什么不直接用 `for` 来处理数组呢？因为 `reduce` 不会处理稀疏数组，所以转换要转换成对象来处理。
+
+数组长度用 `len` 来保存，这里使用了无符号位右移操作符 `>>>` ，确保 `len` 为非负整数。
+
+用 `k` 来保存当前索引，`accumulator` 为返回值。
+
+接下来，检测回调函数 `fun` 是否为 `function` ，如果不是，抛出类型错误。
+
+ 在数组为空，并且又没有提供初始值（即只有一个参数 `fun`）时，抛出类型错误。
 
 ## 系列文章
 
