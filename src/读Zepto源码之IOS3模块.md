@@ -21,6 +21,57 @@ if (String.prototype.trim === undefined) // fix for iOS 3.2
 
 实现的方式也简单，就是用正则将开头和结尾的空格去掉。`^\s+` 这段是匹配开头的空格，`\s+$` 是匹配结尾的空格。
 
+## reduce
+
+```javascript
+// For iOS 3.x
+// from https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/reduce
+if (Array.prototype.reduce === undefined)
+  Array.prototype.reduce = function(fun){
+    if(this === void 0 || this === null) throw new TypeError()
+    var t = Object(this), len = t.length >>> 0, k = 0, accumulator
+    if(typeof fun != 'function') throw new TypeError()
+    if(len == 0 && arguments.length == 1) throw new TypeError()
+
+    if(arguments.length >= 2)
+      accumulator = arguments[1]
+    else
+      do{
+        if(k in t){
+          accumulator = t[k++]
+          break
+        }
+        if(++k >= len) throw new TypeError()
+      } while (true)
+
+        while (k < len){
+          if(k in t) accumulator = fun.call(undefined, accumulator, t[k], k, t)
+          k++
+        }
+    return accumulator
+  }
+
+```
+
+### 用法与参数
+
+要理解这段代码，先来看一下 `reduce` 的用法和参数：
+
+**用法**： 
+
+> arr.reduce(callback[, initialValue])
+
+**参数**：
+
+* callback: 回调函数，有如下参数
+  * accumulator: 上一个回调函数返回的值或者是初始值（`initialValue`）
+  * currentValue: 当前值
+  * currentIndex: 当前值在数组中的索引
+  * array: 调用 `reduce` 的数组
+* initialValue: 初始值，如果没有提供，则为数组的第一项。如果数组为空数组，而又没有提供初始值时，会报错
+
+
+
 ## 系列文章
 
 《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
@@ -54,7 +105,7 @@ if (String.prototype.trim === undefined) // fix for iOS 3.2
 
 ## 参考
 
-* ​
+* [Array.prototype.reduce()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce)
 
 ## License
 
