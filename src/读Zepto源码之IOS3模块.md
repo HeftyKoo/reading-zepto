@@ -107,11 +107,23 @@ else
 
 如果参数至少有两项，则 `accumulator` 的初始值很简单，就是 `arguments[1]` ，即 `initialValue`。
 
-如果没有提供初始值，则叠加索引，直到找到在对象 `t` 中存在的索引。注意这里用了 `do...while`，所以最终结果，要么是报类型错误，要么 `accumulator` 能获取到值。
+如果没有提供初始值，则迭代索引，直到找到在对象 `t` 中存在的索引。注意这里用了 `do...while`，所以最终结果，要么是报类型错误，要么 `accumulator` 能获取到值。
 
 这段还巧妙地用了 `++k` 和 `k++` 。如果 `k` 在对象 `t` 中存在时，则赋值给 `accumulator` 后 `k` 再自增，否则用 `k` 自增后再和 `len` 比较，如果超出 `len` 的长度，则报错，因为不存在下一个可以赋给 `accumulator` 的值。
 
+### 返回结果
 
+```javascript
+while (k < len){
+  if(k in t) accumulator = fun.call(undefined, accumulator, t[k], k, t)
+  k++
+}
+return accumulator
+```
+
+要注意，如果没有提供初始值时，`k` 是自增后的值，即不再需要处理数组的第一个值。
+
+到这里问题就比较简单了，就是 `while` 循环，用 `accumulator` 保存回调函数返回的值，在下一次循环时，再将 `accumulator` 作为参数传递给回调函数，直至数组耗尽，然后将结果返回。
 
 ## 系列文章
 
