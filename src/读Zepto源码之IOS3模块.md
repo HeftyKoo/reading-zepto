@@ -8,6 +8,19 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## trim
+
+```javascript
+if (String.prototype.trim === undefined) // fix for iOS 3.2
+  String.prototype.trim = function(){ return this.replace(/^\s+|\s+$/g, '') }
+```
+
+看注释， `trim` 是为了兼容 `ios3.2` 的。
+
+也是常规的做法，如果 `String` 的 `prototype` 上没有 `trim` 方法，则自己实现一个。
+
+实现的方式也简单，就是用正则将开头和结尾的空格去掉。`^\s+` 这段是匹配开头的空格，`\s+$` 是匹配结尾的空格。
+
 ## 系列文章
 
 《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
