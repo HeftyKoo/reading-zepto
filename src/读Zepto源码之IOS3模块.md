@@ -44,13 +44,12 @@ if (Array.prototype.reduce === undefined)
         if(++k >= len) throw new TypeError()
       } while (true)
 
-        while (k < len){
-          if(k in t) accumulator = fun.call(undefined, accumulator, t[k], k, t)
-          k++
-        }
+    while (k < len){
+      if(k in t) accumulator = fun.call(undefined, accumulator, t[k], k, t)
+      k++
+    }
     return accumulator
   }
-
 ```
 
 ### 用法与参数
@@ -90,6 +89,29 @@ if(len == 0 && arguments.length == 1) throw new TypeError()
 接下来，检测回调函数 `fun` 是否为 `function` ，如果不是，抛出类型错误。
 
  在数组为空，并且又没有提供初始值（即只有一个参数 `fun`）时，抛出类型错误。
+
+### accumulator初始值
+
+```javascript
+if(arguments.length >= 2)
+  accumulator = arguments[1]
+else
+  do{
+    if(k in t){
+      accumulator = t[k++]
+      break
+    }
+    if(++k >= len) throw new TypeError()
+  } while (true)
+```
+
+如果参数至少有两项，则 `accumulator` 的初始值很简单，就是 `arguments[1]` ，即 `initialValue`。
+
+如果没有提供初始值，则叠加索引，直到找到在对象 `t` 中存在的索引。注意这里用了 `do...while`，所以最终结果，要么是报类型错误，要么 `accumulator` 能获取到值。
+
+这段还巧妙地用了 `++k` 和 `k++` 。如果 `k` 在对象 `t` 中存在时，则赋值给 `accumulator` 后 `k` 再自增，否则用 `k` 自增后再和 `len` 比较，如果超出 `len` 的长度，则报错，因为不存在下一个可以赋给 `accumulator` 的值。
+
+
 
 ## 系列文章
 
