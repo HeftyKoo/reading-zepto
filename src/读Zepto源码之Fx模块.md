@@ -98,7 +98,72 @@ $.fx = {
 * transitionEnd： 过渡完成时触发的事件，调用 `normalizeEvent` 事件加了浏览器前缀补全
 * animationEnd： 动画完成时触发的事件，同样加了浏览器前缀补全
 
+### animate
 
+```javascript
+$.fn.animate = function(properties, duration, ease, callback, delay){
+  if ($.isFunction(duration))
+    callback = duration, ease = undefined, duration = undefined
+  if ($.isFunction(ease))
+    callback = ease, ease = undefined
+  if ($.isPlainObject(duration))
+    ease = duration.easing, callback = duration.complete, delay = duration.delay, duration = duration.duration
+  if (duration) duration = (typeof duration == 'number' ? duration :
+                            ($.fx.speeds[duration] || $.fx.speeds._default)) / 1000
+  if (delay) delay = parseFloat(delay) / 1000
+  return this.anim(properties, duration, ease, callback, delay)
+}
+```
+
+我们平时用得最多的是 `animate` 这个方法，但是这个方法最终调用的是 `anim` 这个方法，`animate` 这个方法相当灵活，因为它主要做的是参数修正的工作，做得参数适应 `anim` 的接口。
+
+#### 参数：
+
+* properties：需要过渡的样式对象，或者 `animation` 的名称，只有这个参数是必传的
+* duration: 过渡时间
+* ease: 缓动函数
+* callback: 过渡或者动画完成后的回调函数
+* delay: 过渡或动画延迟执行的时间
+
+#### 修正参数
+
+```javascript
+if ($.isFunction(duration))
+  callback = duration, ease = undefined, duration = undefined
+```
+
+这是处理传参为 `animate(properties, callback)` 的情况。
+
+```javascript
+if ($.isFunction(ease))
+    callback = ease, ease = undefined
+```
+
+这是处理 `animate(properties, duration, callback)` 的情况，此时 `callback` 在参数 `ease` 的位置
+
+```javascript
+if ($.isPlainObject(duration))
+  ease = duration.easing, callback = duration.complete, delay = duration.delay, duration = duration.duration
+```
+
+这是处理 `animate(properties, { duration: msec, easing: type, complete: fn }) ` 的情况。除了 `properties` ，后面的参数还可以写在一个对象中传入。
+
+如果检测到为这个传参方式，则将对应的值从对象中取出。
+
+```javascript
+if (duration) duration = (typeof duration == 'number' ? duration :
+                          ($.fx.speeds[duration] || $.fx.speeds._default)) / 1000
+```
+
+如果过渡时间为数字，则直接采用，如果是 `speeds` 中指定的 `key` ，即 `slow` 、`fast` 甚至 `_default` ，则从 `speeds` 中取值，否则用 `speends` 的 `_default` 值。
+
+因为在样式中是用 `s` 取值，所以要将毫秒数除 `1000`。
+
+```javascript
+if (delay) delay = parseFloat(delay) / 1000
+```
+
+也将延迟时间转换为秒。
 
 ## GitBook
 
