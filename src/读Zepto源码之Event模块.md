@@ -8,6 +8,10 @@ Event 模块是 Zepto 必备的模块之一，由于对 Event Api 不太熟，Ev
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
 ## 准备知识
 
 ### focus/blur 的事件模拟

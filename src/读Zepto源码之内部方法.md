@@ -1,5 +1,15 @@
 # 读Zepto源码之内部方法
 
+读 Zepto 源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
+
+## 源码版本
+
+本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
+
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
 ## 数组方法
 
 ### 定义

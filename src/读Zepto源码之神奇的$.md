@@ -8,6 +8,10 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
 ## zepto的css选择器 `zepto.qsa`
 
 我们都知道，很多时候，我们都用`$` 来获取DOM对象，这跟 `zepto.qsa` 有很大的关系。 

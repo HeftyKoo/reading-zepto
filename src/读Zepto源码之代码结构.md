@@ -8,6 +8,10 @@
 
 阅读zepto之前需要了解 javascript 原型链和闭包的知识，推荐阅读王福朋的这篇文章:[深入理解 Javascript 原型和闭包](http://www.cnblogs.com/wangfupeng1988/p/3977924.html)，写得很详细，也非常易于阅读。
 
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
 ## 源码结构
 
 ### 整体结构

@@ -8,6 +8,10 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
 ## Promise/A+ 规范
 
 规范的具体内容可以参考《[Promises/A+](https://promisesaplus.com/)》 和对应的中文翻译 《[Promise/A+规范](https://segmentfault.com/a/1190000002452115)》，这里只简单总结一下。

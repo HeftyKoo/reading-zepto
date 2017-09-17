@@ -8,6 +8,10 @@ Callbacks 模块并不是必备的模块，其作用是管理回调函数，为 
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
 ## 整体结构
 
 将 Callbacks 模块的代码精简后，得到的结构如下：

@@ -8,6 +8,10 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
 ## ajax的事件触发顺序
 
 `zepto` 针对 `ajax` 的发送过程，定义了以下几个事件，正常情况下的触发顺序如下：

@@ -8,6 +8,10 @@ IE模块也是 Zepto 的必备模块之一，这个模块的代码量很少，�
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
 ## 改写getComputedStyle
 
 ```javascript

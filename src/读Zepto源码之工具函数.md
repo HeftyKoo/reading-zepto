@@ -6,6 +6,10 @@ Zepto 提供了丰富的工具函数，下面来一一解读。
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
 ## $.extend
 
 `$.extend` 方法可以用来扩展目标对象的属性。目标对象的同名属性会被源对象的属性覆盖。
