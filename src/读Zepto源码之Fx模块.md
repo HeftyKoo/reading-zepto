@@ -18,7 +18,13 @@ function dasherize(str) { return str.replace(/([A-Z])/g, '-$1').toLowerCase() }
 
 这个方法是将驼峰式（ `camleCase` ）的写法转换成用 `-` 连接的连词符的写法（ `camle-case` ）。转换的目的是让写法符合 `css` 的样式规范。
 
+### normalizeEvent
 
+```javascript
+function normalizeEvent(name) { return eventPrefix ? eventPrefix + name : name.toLowerCase() }
+```
+
+为事件名增加浏览器前缀。
 
 ## GitBook
 
