@@ -8,6 +8,10 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
 ## 内部方法
 
 ### dasherize
@@ -45,7 +49,7 @@ var prefix = '', eventPrefix,
 
 `testEl` 是为检测浏览器前缀所创建的临时节点。
 
-`cssReset` 用来保存加完前缀后的样式规则。
+`cssReset` 用来保存加完前缀后的样式规则，用来过渡或动画完成后重置样式。
 
 ### 浏览器前缀检测
 
@@ -148,7 +152,7 @@ if ($.isPlainObject(duration))
 
 这是处理 `animate(properties, { duration: msec, easing: type, complete: fn }) ` 的情况。除了 `properties` ，后面的参数还可以写在一个对象中传入。
 
-如果检测到为这个传参方式，则将对应的值从对象中取出。
+如果检测到为对象的传参方式，则将对应的值从对象中取出。
 
 ```javascript
 if (duration) duration = (typeof duration == 'number' ? duration :
@@ -165,9 +169,203 @@ if (delay) delay = parseFloat(delay) / 1000
 
 也将延迟时间转换为秒。
 
-## GitBook
+### anim
 
-《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+```javascript
+$.fn.anim = function(properties, duration, ease, callback, delay){
+  var key, cssValues = {}, cssProperties, transforms = '',
+      that = this, wrappedCallback, endEvent = $.fx.transitionEnd,
+      fired = false
+
+  if (duration === undefined) duration = $.fx.speeds._default / 1000
+  if (delay === undefined) delay = 0
+  if ($.fx.off) duration = 0
+
+  if (typeof properties == 'string') {
+    // keyframe animation
+    cssValues[animationName] = properties
+    cssValues[animationDuration] = duration + 's'
+    cssValues[animationDelay] = delay + 's'
+    cssValues[animationTiming] = (ease || 'linear')
+    endEvent = $.fx.animationEnd
+  } else {
+    cssProperties = []
+    // CSS transitions
+    for (key in properties)
+      if (supportedTransforms.test(key)) transforms += key + '(' + properties[key] + ') '
+    else cssValues[key] = properties[key], cssProperties.push(dasherize(key))
+
+    if (transforms) cssValues[transform] = transforms, cssProperties.push(transform)
+    if (duration > 0 && typeof properties === 'object') {
+      cssValues[transitionProperty] = cssProperties.join(', ')
+      cssValues[transitionDuration] = duration + 's'
+      cssValues[transitionDelay] = delay + 's'
+      cssValues[transitionTiming] = (ease || 'linear')
+    }
+  }
+
+  wrappedCallback = function(event){
+    if (typeof event !== 'undefined') {
+      if (event.target !== event.currentTarget) return // makes sure the event didn't bubble from "below"
+      $(event.target).unbind(endEvent, wrappedCallback)
+    } else
+      $(this).unbind(endEvent, wrappedCallback) // triggered by setTimeout
+
+    fired = true
+    $(this).css(cssReset)
+    callback && callback.call(this)
+  }
+  if (duration > 0){
+    this.bind(endEvent, wrappedCallback)
+    // transitionEnd is not always firing on older Android phones
+    // so make sure it gets fired
+    setTimeout(function(){
+      if (fired) return
+      wrappedCallback.call(that)
+    }, ((duration + delay) * 1000) + 25)
+  }
+
+  // trigger page reflow so new elements can animate
+  this.size() && this.get(0).clientLeft
+
+  this.css(cssValues)
+
+  if (duration <= 0) setTimeout(function() {
+    that.each(function(){ wrappedCallback.call(this) })
+  }, 0)
+
+  return this
+}
+```
+
+`animation` 最终调用的是 `anim` 方法，`Zepto` 也将这个方法暴露了出去，其实我觉得只提供 `animation` 方法就可以了，这个方法完全可以作为私有的方法调用。
+
+#### 参数默认值
+
+```javascript
+if (duration === undefined) duration = $.fx.speeds._default / 1000
+if (delay === undefined) delay = 0
+if ($.fx.off) duration = 0
+```
+
+如果没有传递持续时间 `duration` ，则默认为 `$.fx.speends._default` 的定义值 `400ms` ，这里需要转换成 `s` 。
+
+如果没有传递 `delay` ，则默认不延迟，即 `0` 。
+
+如果浏览器不支持过渡和动画，则 `duration` 设置为 `0` ，即没有动画，立即执行回调。
+
+#### 处理animation动画参数
+
+```javascript
+if (typeof properties == 'string') {
+  // keyframe animation
+  cssValues[animationName] = properties
+  cssValues[animationDuration] = duration + 's'
+  cssValues[animationDelay] = delay + 's'
+  cssValues[animationTiming] = (ease || 'linear')
+  endEvent = $.fx.animationEnd
+} 
+```
+
+如果 `properties` 为 `string`， 即 `properties` 为动画名，则设置动画对应的 `css` ，`duration` 和 `delay` 都加上了 `s` 的单位，默认的缓动函数为 `linear` 。
+
+#### 处理transition参数
+
+````javascript
+else {
+  cssProperties = []
+  // CSS transitions
+  for (key in properties)
+    if (supportedTransforms.test(key)) transforms += key + '(' + properties[key] + ') '
+  else cssValues[key] = properties[key], cssProperties.push(dasherize(key))
+
+  if (transforms) cssValues[transform] = transforms, cssProperties.push(transform)
+  if (duration > 0 && typeof properties === 'object') {
+    cssValues[transitionProperty] = cssProperties.join(', ')
+    cssValues[transitionDuration] = duration + 's'
+    cssValues[transitionDelay] = delay + 's'
+    cssValues[transitionTiming] = (ease || 'linear')
+  }
+}
+````
+
+`supportedTransforms` 是用来检测是否为 `transform` 的正则，如果是 `transform` ，则拼接成符合 `transform` 规则的字符串。
+
+否则，直接将值存入 `cssValues` 中，将 `css` 的样式名存入 `cssProperties` 中，并且调用了 `dasherize` 方法，使得 `properties`  的 `css` 样式名（ `key` ）支持驼峰式的写法。
+
+```javascript
+if (transforms) cssValues[transform] = transforms, cssProperties.push(transform)
+```
+
+这段是检测是否有 `transform`  ，如果有，也将 `transform` 存入 `cssValues` 和 `cssProperties` 中。
+
+接下来判断动画是否开启，并且是否有过渡属性，如果有，则设置对应的值。
+
+#### 回调函数的处理
+
+```javascript
+wrappedCallback = function(event){
+  if (typeof event !== 'undefined') {
+    if (event.target !== event.currentTarget) return // makes sure the event didn't bubble from "below"
+    $(event.target).unbind(endEvent, wrappedCallback)
+  } else
+    $(this).unbind(endEvent, wrappedCallback) // triggered by setTimeout
+
+  fired = true
+  $(this).css(cssReset)
+  callback && callback.call(this)
+}
+```
+
+如果浏览器支持过渡或者动画事件，则在动画结束的时候，取消事件监听，注意在 `unbind` 时，有个 `event.target !== event.currentTarget` 的判定，这是排除冒泡事件。
+
+如果事件不存在时，直接取消对应元素上的事件监听。
+
+并且将状态控制 `fired` 设置为 `true` ，表示回调已经执行。
+
+动画完成后，再将涉及过渡或动画的样式设置为空。
+
+最后，调用传递进来的回调函数，整个动画完成。
+
+#### 绑定过渡或动画的结束事件
+
+```javascript
+if (duration > 0){
+  this.bind(endEvent, wrappedCallback)
+  setTimeout(function(){
+    if (fired) return
+    wrappedCallback.call(that)
+  }, ((duration + delay) * 1000) + 25)
+}
+```
+
+绑定过渡或动画的结束事件，在动画结束时，执行处理过的回调函数。
+
+注意这里有个 `setTimeout` ，是避免浏览器不支持过渡或动画事件时，可以通过 `setTimeout` 执行回调。`setTimeout` 的回调执行比动画时间长 `25ms` ，目的是让事件响应在 `setTimeout` 之前，如果浏览器支持过渡或动画事件， `fired` 会在回调执行时设置成 `true`， `setTimeout` 的回调函数不会再重复执行。
+
+#### 触发页面回流
+
+```javascript
+ // trigger page reflow so new elements can animate
+this.size() && this.get(0).clientLeft
+
+this.css(cssValues)
+
+```
+
+这里用了点黑科技，读取 `clientLeft` 属性，触发页面的回流，使得动画的样式设置上去时可以立即执行。
+
+具体可以这篇文章中的解释：[2014-02-07-hidden-documentation.md](https://github.com/mislav/blog/blob/master/_posts/2014-02-07-hidden-documentation.md) 
+
+#### 过渡时间不大于零的回调处理
+
+```javascript
+if (duration <= 0) setTimeout(function() {
+  that.each(function(){ wrappedCallback.call(this) })
+}, 0)
+```
+
+`duration` 不大于零时，可以是参数设置错误，也可能是浏览器不支持过渡或动画，就立即执行回调函数。
 
 ## 系列文章
 
@@ -201,6 +399,8 @@ if (delay) delay = parseFloat(delay) / 1000
 ## 参考
 
 * [一步一步DIY zepto库，研究zepto源码7--动画模块(fx fx_method)](https://zrysmt.github.io/2017/04/28/%E4%B8%80%E6%AD%A5%E4%B8%80%E6%AD%A5DIY%20zepto%E5%BA%93%EF%BC%8C%E7%A0%94%E7%A9%B6zepto%E6%BA%90%E7%A0%817--%E5%8A%A8%E7%94%BB%E6%A8%A1%E5%9D%97(fx%EF%BC%8Cfx_method)/)
+* [How (not) to trigger a layout in WebKit](http://gent.ilcore.com/2011/03/how-not-to-trigger-layout-in-webkit.html)
+* [2014-02-07-hidden-documentation.md](https://github.com/mislav/blog/blob/master/_posts/2014-02-07-hidden-documentation.md)
 
 ## License
 
