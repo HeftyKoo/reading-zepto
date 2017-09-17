@@ -8,6 +8,18 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## 内部方法
+
+### dasherize
+
+```javascript
+function dasherize(str) { return str.replace(/([A-Z])/g, '-$1').toLowerCase() }
+```
+
+这个方法是将驼峰式（ `camleCase` ）的写法转换成用 `-` 连接的连词符的写法（ `camle-case` ）。转换的目的是让写法符合 `css` 的样式规范。
+
+
+
 ## GitBook
 
 《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
