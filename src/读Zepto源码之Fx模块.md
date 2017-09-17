@@ -26,6 +26,58 @@ function normalizeEvent(name) { return eventPrefix ? eventPrefix + name : name.t
 
 为事件名增加浏览器前缀。
 
+## 为事件和样式增加浏览器前缀
+
+### 变量
+
+```javascript
+var prefix = '', eventPrefix,
+    vendors = { Webkit: 'webkit', Moz: '', O: 'o' },
+    testEl = document.createElement('div'),
+    supportedTransforms = /^((translate|rotate|scale)(X|Y|Z|3d)?|matrix(3d)?|perspective|skew(X|Y)?)$/i,
+    transform,
+    transitionProperty, transitionDuration, transitionTiming, transitionDelay,
+    animationName, animationDuration, animationTiming, animationDelay,
+    cssReset = {}
+```
+
+`vendors` 定义了浏览器的样式前缀（ `key` ） 和事件前缀 ( `value` ) 。
+
+`testEl` 是为检测浏览器前缀所创建的临时节点。
+
+`cssReset` 用来保存加完前缀后的样式规则。
+
+### 浏览器前缀检测
+
+```javascript
+if (testEl.style.transform === undefined) $.each(vendors, function(vendor, event){
+  if (testEl.style[vendor + 'TransitionProperty'] !== undefined) {
+    prefix = '-' + vendor.toLowerCase() + '-'
+    eventPrefix = event
+    return false
+  }
+})
+```
+
+检测到浏览器不支持标准的 `transform` 属性，则依次检测加了不同浏览器前缀的 `transitionProperty` 属性，直至找到合适的浏览器前缀，样式前缀保存在 `prefix` 中， 事件前缀保存在 `eventPrefix` 中。
+
+### 初始化样式
+
+```javascript
+transform = prefix + 'transform'
+cssReset[transitionProperty = prefix + 'transition-property'] =
+cssReset[transitionDuration = prefix + 'transition-duration'] =
+cssReset[transitionDelay    = prefix + 'transition-delay'] =
+cssReset[transitionTiming   = prefix + 'transition-timing-function'] =
+cssReset[animationName      = prefix + 'animation-name'] =
+cssReset[animationDuration  = prefix + 'animation-duration'] =
+cssReset[animationDelay     = prefix + 'animation-delay'] =
+cssReset[animationTiming    = prefix + 'animation-timing-function'] = ''
+
+```
+
+获取浏览器前缀后，为所有的 `transition` 和 `animation` 属性加上对应的前缀，都初始化为 `''`，方便后面使用。
+
 ## GitBook
 
 《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
