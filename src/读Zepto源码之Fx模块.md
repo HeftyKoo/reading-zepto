@@ -78,6 +78,28 @@ cssReset[animationTiming    = prefix + 'animation-timing-function'] = ''
 
 获取浏览器前缀后，为所有的 `transition` 和 `animation` 属性加上对应的前缀，都初始化为 `''`，方便后面使用。
 
+## 方法
+
+### $.fx
+
+```javascript
+$.fx = {
+  off: (eventPrefix === undefined && testEl.style.transitionProperty === undefined),
+  speeds: { _default: 400, fast: 200, slow: 600 },
+  cssPrefix: prefix,
+  transitionEnd: normalizeEvent('TransitionEnd'),
+  animationEnd: normalizeEvent('AnimationEnd')
+}
+```
+
+* off:  表示浏览器是否支持过渡或动画，如果既没有浏览器前缀，也不支持标准的属性，则判定该浏览器不支持动画
+* speeds: 定义了三种动画持续的时间， 默认为 `400ms` 
+* cssPrefix: 样式浏览器兼容前缀，即 `prefix`
+* transitionEnd： 过渡完成时触发的事件，调用 `normalizeEvent` 事件加了浏览器前缀补全
+* animationEnd： 动画完成时触发的事件，同样加了浏览器前缀补全
+
+
+
 ## GitBook
 
 《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
