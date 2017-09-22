@@ -348,4 +348,4 @@ likeArrayData = {
 
 最后，所有文章都会同步发送到微信公众号上，欢迎关注,欢迎提意见：
 
-  ![](https://segmentfault.com/img/bVCJ55?w=430&h=430)
+  ![](https://raw.githubusercontent.com/yeyuqiudeng/resource/master/images/qrcode_front-end-article.jpg)
