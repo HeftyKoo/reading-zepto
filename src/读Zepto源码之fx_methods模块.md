@@ -98,7 +98,61 @@ $.fn.toggle = function(speed, callback) {
 
 否则，判断每个元素的 `display` 属性值，如果为 `none`，则调用 `show` 方法显示，否则调用 `hide` 方法隐藏。
 
- 
+## .fadeTo()
+
+```javascript
+$.fn.fadeTo = function(speed, opacity, callback) {
+  return anim(this, speed, opacity, null, callback)
+}
+```
+
+`fadeTo` 可以其实是通过调节过渡时间 `speed` 和透明度 `opacity` 来实现动画效果。
+
+和 `show` 和 `hide` 不同的是，`fadeTo` 的 `opacity` 不一定为 `1` 或者 `0`， 可以由调用者指定。
+
+## .fadeIn()
+
+```javascript
+$.fn.fadeIn = function(speed, callback) {
+  var target = this.css('opacity')
+  if (target > 0) this.css('opacity', 0)
+  else target = 1
+  return origShow.call(this).fadeTo(speed, target, callback)
+}
+```
+
+ 淡入效果。
+
+ `fadeIn` 其实调用的是 `fadeTo` ，跟 `show` 有点类似，最终将 `opacity` 变为 `1` 。只是不处理 `scale` 变形。
+
+## .fadeOut()
+
+```javascript
+$.fn.fadeOut = function(speed, callback) {
+  return hide(this, speed, null, callback)
+}
+```
+
+淡出。
+
+`fadeOut` 调用的是 `hide` 方法，只是不处理 `scale` 变形。
+
+## .fadeToggle()
+
+```javascript
+$.fn.fadeToggle = function(speed, callback) {
+  return this.each(function(){
+    var el = $(this)
+    el[
+      (el.css('opacity') == 0 || el.css('display') == 'none') ? 'fadeIn' : 'fadeOut'
+    ](speed, callback)
+  })
+}
+```
+
+切换淡入淡出效果。
+
+如果 `display` 为 `node` 时，调用 `fadeIn` 方法显示，否则调用 `fadeOut` 方法隐藏。
 
 ## 系列文章
 
