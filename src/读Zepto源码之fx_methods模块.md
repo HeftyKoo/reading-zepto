@@ -47,7 +47,58 @@ function hide(el, speed, scale, callback) {
 }
 ```
 
-`hide` 方法其实就是将 `opacity` 的属性设置为 `0` 。在动画完成后，调用 `origHide` 方法，即原来的 `hide` 方法，将元素的 `display` 设置为 `none`。原来的 `hide` 方法分析见《[读Zepto源码之样式操作](https://github.com/yeyuqiudeng/reading-zepto/blob/6fb60c6a6ca1cf4f6846c32883774b5ba0f7de45/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E6%A0%B7%E5%BC%8F%E6%93%8D%E4%BD%9C.md#hide)》
+`hide` 方法其实就是将 `opacity` 的属性设置为 `0` 。在动画完成后，调用 `origHide` 方法，即原有的 `hide` 方法，将元素的 `display` 设置为 `none`。原有的 `hide` 方法分析见《[读Zepto源码之样式操作](https://github.com/yeyuqiudeng/reading-zepto/blob/6fb60c6a6ca1cf4f6846c32883774b5ba0f7de45/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E6%A0%B7%E5%BC%8F%E6%93%8D%E4%BD%9C.md#hide)》
+
+## .show()
+
+```javascript
+$.fn.show = function(speed, callback) {
+  origShow.call(this)
+  if (speed === undefined) speed = 0
+  else this.css('opacity', 0)
+  return anim(this, speed, 1, '1,1', callback)
+}
+```
+
+`show` 方法首先调用原有的 `hide` 方法，将元素显示出来，这是实现动画的基本条件。
+
+如果没有设置 `speed`， 表示不需要动画，则过渡时间 `speed` 设置为 `0`。立即显示元素。
+
+否则，先将 `opactity` 设置为 `0`， 再调用 `anim` 方法执行动画。`opacity` 设置为 `0` 也是执行动画的关键，从 `0` 变为 `1` 才有过渡的效果。
+
+## .hide()
+
+```javascript
+$.fn.hide = function(speed, callback) {
+  if (speed === undefined) return origHide.call(this)
+  else return hide(this, speed, '0,0', callback)
+}
+```
+
+如果 `speed` 没有传递，简单调用原有的 `hide` 方法即可，因为不需要过渡效果。
+
+否则调用内部方法 `hide`。
+
+## .toggle()
+
+```javascript
+$.fn.toggle = function(speed, callback) {
+  if (speed === undefined || typeof speed == 'boolean')
+    return origToggle.call(this, speed)
+  else return this.each(function(){
+    var el = $(this)
+    el[el.css('display') == 'none' ? 'show' : 'hide'](speed, callback)
+  })
+}
+```
+
+`toggle` 方法是 `show` 和 `hide` 方法的切换。
+
+如果 `speed` 没有传递，或者为 `boolean` 值，则表示不需要动画，调用原有的 `toggle` 方法即可。为什么要有一个 `boolean` 值的判断呢，这要看回 《[读Zepto源码之样式操作](https://github.com/yeyuqiudeng/reading-zepto/blob/6fb60c6a6ca1cf4f6846c32883774b5ba0f7de45/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E6%A0%B7%E5%BC%8F%E6%93%8D%E4%BD%9C.md#toggle)》关于 `toggle` 方法的分析了，原有的 `toggle` 方法接收一个参数，如果为 `true`，则指定调用 `show` 方法，否则调用 `hide` 方法。
+
+否则，判断每个元素的 `display` 属性值，如果为 `none`，则调用 `show` 方法显示，否则调用 `hide` 方法隐藏。
+
+ 
 
 ## 系列文章
 
