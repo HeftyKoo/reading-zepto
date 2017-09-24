@@ -10,6 +10,30 @@
 
 《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
 
+## 内部方法
+
+### anim
+
+```javascript
+function anim(el, speed, opacity, scale, callback) {
+  if (typeof speed == 'function' && !callback) callback = speed, speed = undefined
+  var props = { opacity: opacity }
+  if (scale) {
+    props.scale = scale
+    el.css($.fx.cssPrefix + 'transform-origin', '0 0')
+  }
+  return el.animate(props, speed, null, callback)
+}
+```
+
+如果 `speed` 的参数类型为函数，并且 `callback` 没有传递，则认为 `speed` 位置的参数为 `callback`。
+
+`props` 是过渡的属性， `fx_fethods` 主要实现 `show` 、 `hide` 和 `fadeIn`、  `fadeOut` 等动画，用到的过渡属性为 `opecity` 和 `scale` 。
+
+当为 `scale` 时，将转换的原点设置为 `0 0`。
+
+ 最后调用的是 `fx` 模块中的 `animate` 方法。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
