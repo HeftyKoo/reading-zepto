@@ -34,6 +34,21 @@ function anim(el, speed, opacity, scale, callback) {
 
  最后调用的是 `fx` 模块中的 `animate` 方法。
 
+### hide
+
+```javascript
+var document = window.document, docElem = document.documentElement,
+    origShow = $.fn.show, origHide = $.fn.hide, origToggle = $.fn.toggle
+function hide(el, speed, scale, callback) {
+  return anim(el, speed, 0, scale, function(){
+    origHide.call($(this))
+    callback && callback.call(this)
+  })
+}
+```
+
+`hide` 方法其实就是将 `opacity` 的属性设置为 `0` 。在动画完成后，调用 `origHide` 方法，即原来的 `hide` 方法，将元素的 `display` 设置为 `none`。原来的 `hide` 方法分析见《[读Zepto源码之样式操作](https://github.com/yeyuqiudeng/reading-zepto/blob/6fb60c6a6ca1cf4f6846c32883774b5ba0f7de45/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E6%A0%B7%E5%BC%8F%E6%93%8D%E4%BD%9C.md#hide)》
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
