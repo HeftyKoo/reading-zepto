@@ -1,5 +1,6 @@
  # SUMMARY
 
++ [读Zepto源码](README.md)
 * [读Zepto源码之代码结构](src/读Zepto源码之代码结构.md)
 * [读Zepto源码之内部方法](src/读Zepto源码之内部方法.md)
 * [读Zepto源码之工具函数](src/读Zepto源码之工具函数.md)
