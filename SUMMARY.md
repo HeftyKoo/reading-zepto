@@ -21,6 +21,7 @@
 * [读Zepto源码之IOS3模块](src/读Zepto源码之IOS3模块.md)
 * [读Zepto源码之Fx模块](src/读Zepto源码之Fx模块.md)
 * [读Zepto源码之fx_methods模块](src/读Zepto源码之fx_methods模块.md)
+* [读Zepto源码之Stack模块](src/读Zepto源码之Stack模块.md)
 * [符文]()
   * [译：怎样处理 Safari 移动端对图片资源的限制](src/附：怎样处理 Safari 移动端对图片资源的限制.md)
 
