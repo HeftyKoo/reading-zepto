@@ -93,6 +93,40 @@ $.fn.serialize = function(){
 
 这里对 `serizlizeArray` 返回的数组再做进一步的处理，首先用 `encodeURIComponent` 序列化 `name` 和 `value` 的值，并用 `=` 号拼接成字符串，存进新的数组中，最后调用 `join` 方法，用 `&` 将各项拼接起来。
 
+## .submit()
+
+```javascript
+$.fn.submit = function(callback) {
+  if (0 in arguments) this.bind('submit', callback)
+  else if (this.length) {
+    var event = $.Event('submit')
+    this.eq(0).trigger(event)
+    if (!event.isDefaultPrevented()) this.get(0).submit()
+  }
+  return this
+}
+```
+
+处理完数据，接下来该到提交了。
+
+```javascript
+if (0 in arguments) this.bind('submit', callback)
+```
+
+如果有传递回调函数 `callback` ，则在表单上绑定 `submit` 事件，以 `callback` 作为事件的回调。
+
+```javascript
+else if (this.length) {
+  var event = $.Event('submit')
+  this.eq(0).trigger(event)
+  if (!event.isDefaultPrevented()) this.get(0).submit()
+}
+```
+
+否则手动绑定 `submit` 事件，如果没有阻止浏览器的默认事件，则在第一个表单上触发 `submit` ，提交表单。
+
+注意 `eq` 和 `get` 的区别， `eq` 返回的是 `Zepto` 对象，而 `get` 返回的是 `DOM` 元素。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
