@@ -1,6 +1,6 @@
 # 读Zepto源码之Form模块
 
-`Form` 模块处理的是表单提交。表单提交包含两部分，一部分是格式化表单数据，另一部分是触发 `submit` 按钮，提交表单。
+`Form` 模块处理的是表单提交。表单提交包含两部分，一部分是格式化表单数据，另一部分是触发 `submit` 事件，提交表单。
 
 读 Zepto 源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
 
@@ -59,7 +59,7 @@ if (this[0]) $.each(this[0].elements, function(_, field){
 })
 ```
 
-如果集合中有多个表单，则只处理第一个表单的表单元素。`this[0].elements`  用来获取所有第一个表单所有的表单元素。
+如果集合中有多个表单，则只处理第一个表单的表单元素。`this[0].elements`  用来获取第一个表单所有的表单元素。
 
 `type` 为表单类型，`name` 为表单元素的 `name` 属性值。
 
@@ -67,7 +67,7 @@ if (this[0]) $.each(this[0].elements, function(_, field){
 
 以下一个条件一个条件来分析：
 
-* `field.nodeName.toLowerCase() != 'fieldset'` 排除 `fueldset` 元素；
+* `field.nodeName.toLowerCase() != 'fieldset'` 排除 `fieldset` 元素；
 * `!field.disabled` 排除禁用的表单，已经禁用了，肯定是没有值需要提交的了；
 * `type != 'submit'` 排除确定按钮；
 * `type != 'reset'` 排除重置按钮；
