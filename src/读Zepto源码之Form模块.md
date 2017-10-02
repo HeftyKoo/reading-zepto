@@ -12,6 +12,71 @@
 
 《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
 
+## .serializeArray()
+
+```javascript
+$.fn.serializeArray = function() {
+  var name, type, result = [],
+      add = function(value) {
+        if (value.forEach) return value.forEach(add)
+        result.push({ name: name, value: value })
+      }
+  if (this[0]) $.each(this[0].elements, function(_, field){
+    type = field.type, name = field.name
+    if (name && field.nodeName.toLowerCase() != 'fieldset' &&
+        !field.disabled && type != 'submit' && type != 'reset' && type != 'button' && type != 'file' &&
+        ((type != 'radio' && type != 'checkbox') || field.checked))
+      add($(field).val())
+  })
+  return result
+}
+```
+
+`serializeArray` 是格式化部分的核心方法，后面的 `serialize` 方法内部调用的也是 `serializeArray` 方法。
+
+`serializeArray` 最终返回的结果是一个数组，每个数组项为包含 `name` 和 `value` 属性的对象。其中 `name` 为表单元素的 `name` 属性值。
+
+### add函数
+
+```javascript
+add = function(value) {
+  if (value.forEach) return value.forEach(add)
+  result.push({ name: name, value: value })
+}
+```
+
+表单的值交由 `add` 函数处理，如果值为数组（支持 `forEach` ） 方法，则调用 `forEach` 遍历，继续由 `add` 函数处理。否则将结果存入数组 `result` 中。最后返回的结果也是这个  `result`。
+
+### 遍历表单元素
+
+```javascript
+if (this[0]) $.each(this[0].elements, function(_, field){
+  type = field.type, name = field.name
+  if (name && field.nodeName.toLowerCase() != 'fieldset' &&
+      !field.disabled && type != 'submit' && type != 'reset' && type != 'button' && type != 'file' &&
+      ((type != 'radio' && type != 'checkbox') || field.checked))
+    add($(field).val())
+})
+```
+
+如果集合中有多个表单，则只处理第一个表单的表单元素。`this[0].elements`  用来获取所有第一个表单所有的表单元素。
+
+`type` 为表单类型，`name` 为表单元素的 `name` 属性值。
+
+这一大段代码的关键在 `if` 中的条件判断，其实是将一些无关的表单元素排除，只处理符合条件的表单元素。
+
+以下一个条件一个条件来分析：
+
+* `field.nodeName.toLowerCase() != 'fieldset'` 排除 `fueldset` 元素；
+* `!field.disabled` 排除禁用的表单，已经禁用了，肯定是没有值需要提交的了；
+* `type != 'submit'` 排除确定按钮；
+* `type != 'reset'` 排除重置按钮；
+* `type != 'button'` 排除按钮；
+* `type != 'file'` 排除文件选择控件；
+* `((type != 'radio' && type != 'checkbox') || field.checked))` 如果是 `radio` 或 `checkbox` 时，则必须要选中，这个也很好理解，如果没有选中，也不会有值需要处理。
+
+然后调用 `add` 方法，将表单元素的值获取到交由其处理。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
@@ -44,6 +109,7 @@
 ## 参考
 
 - [zepto源码分析之form模块](https://juejin.im/post/59d07c03f265da0668761e82?utm_source=gold_browser_extension)
+- [HTMLFormElement.elements](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/elements)
 
 ## License
 
