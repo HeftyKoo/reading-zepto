@@ -77,6 +77,22 @@ if (this[0]) $.each(this[0].elements, function(_, field){
 
 然后调用 `add` 方法，将表单元素的值获取到交由其处理。
 
+## .serialize()
+
+```javascript
+$.fn.serialize = function(){
+  var result = []
+  this.serializeArray().forEach(function(elm){
+    result.push(encodeURIComponent(elm.name) + '=' + encodeURIComponent(elm.value))
+  })
+  return result.join('&')
+}
+```
+
+表单元素处理完成后，最终是要拼成如 `name1=value1&name2=value2&...` 的形式，`serialize` 方法要做的就是这部分事情。
+
+这里对 `serizlizeArray` 返回的数组再做进一步的处理，首先用 `encodeURIComponent` 序列化 `name` 和 `value` 的值，并用 `=` 号拼接成字符串，存进新的数组中，最后调用 `join` 方法，用 `&` 将各项拼接起来。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
