@@ -12,6 +12,32 @@
 
 《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
 
+## 内部方法
+
+### attributeData
+
+```javascript
+var data = {}, dataAttr = $.fn.data, camelize = $.camelCase,
+    exp = $.expando = 'Zepto' + (+new Date()), emptyArray = []
+function attributeData(node) {
+  var store = {}
+  $.each(node.attributes || emptyArray, function(i, attr){
+    if (attr.name.indexOf('data-') == 0)
+      store[camelize(attr.name.replace('data-', ''))] =
+        $.zepto.deserializeValue(attr.value)
+  })
+  return store
+}
+```
+
+这个方法用来获取给定 `node` 中所有 `data-*` 属性的值，并储存到 `store` 对象中。
+
+`node.attributes` 获取到的是节点的所有属性，因此在遍历的时候，需要判断属性名是否以 `data-` 开头。
+
+在存储的时候，将属性名的 `data-` 去掉，剩余部分转换成驼峰式，作为 `store` 对象的 `key` 。
+
+在 `DOM` 中的属性值都为字符串格式，为方便操作，调用 `deserializeValue` 方法，转换成对应的数据类型，关于这个方法的具体分析，请看 《[读Zepto源码之属性操作](https://github.com/yeyuqiudeng/reading-zepto/blob/6fb60c6a6ca1cf4f6846c32883774b5ba0f7de45/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E5%B1%9E%E6%80%A7%E6%93%8D%E4%BD%9C.md#deserializevalue)》
+
 
 
 ## 系列文章
@@ -47,6 +73,7 @@
 ## 参考
 
 * [Zepto中数据缓存原理与实现](https://segmentfault.com/a/1190000011443975)
+* [Element.attributes](https://developer.mozilla.org/zh-CN/docs/Web/API/Element/attributes)
 
 ## License
 
