@@ -38,7 +38,38 @@ function attributeData(node) {
 
 在 `DOM` 中的属性值都为字符串格式，为方便操作，调用 `deserializeValue` 方法，转换成对应的数据类型，关于这个方法的具体分析，请看 《[读Zepto源码之属性操作](https://github.com/yeyuqiudeng/reading-zepto/blob/6fb60c6a6ca1cf4f6846c32883774b5ba0f7de45/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E5%B1%9E%E6%80%A7%E6%93%8D%E4%BD%9C.md#deserializevalue)》
 
+## setData
 
+```javascript
+function setData(node, name, value) {
+  var id = node[exp] || (node[exp] = ++$.uuid),
+      store = data[id] || (data[id] = attributeData(node))
+  if (name !== undefined) store[camelize(name)] = value
+  return store
+}
+```
+
+更多时候，储存数据不需要写在 `DOM` 中，只需要储存在内存中即可。而且读取 `DOM` 的成本非常高。
+
+`setData` 方法会将对应 `DOM` 的数据储存在 `store` 对象中。
+
+```javascript
+var id = node[exp] || (node[exp] = ++$.uuid)
+```
+
+首先读取 `node` 的 `exp` 属性，从前面可以看到 `exp` 是一个 `Zepto` 加上时间戳的字符串，以确保属性名的唯一性，避免覆盖用户自定义的属性，如果 `node` 尚未打上 `exp` 标记，表明这个节点并没有缓存的数据，则设置节点的 `exp` 属性。
+
+```javascript
+store = data[id] || (data[id] = attributeData(node))
+```
+
+从 `data` 中获取节点的之前缓存的数据，如果之前没有缓存数据，则调用 `attributeData` 方法，获取节点上所有以 `data-` 开头的属性值，缓存到 `data` 对象中。
+
+```javascript
+store[camelize(name)] = value
+```
+
+最后，设置需要缓存的值。
 
 ## 系列文章
 
