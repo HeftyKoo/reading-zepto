@@ -38,7 +38,7 @@ function attributeData(node) {
 
 在 `DOM` 中的属性值都为字符串格式，为方便操作，调用 `deserializeValue` 方法，转换成对应的数据类型，关于这个方法的具体分析，请看 《[读Zepto源码之属性操作](https://github.com/yeyuqiudeng/reading-zepto/blob/6fb60c6a6ca1cf4f6846c32883774b5ba0f7de45/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E5%B1%9E%E6%80%A7%E6%93%8D%E4%BD%9C.md#deserializevalue)》
 
-## setData
+### setData
 
 ```javascript
 function setData(node, name, value) {
@@ -70,6 +70,46 @@ store[camelize(name)] = value
 ```
 
 最后，设置需要缓存的值。
+
+### getData
+
+```javascript
+function getData(node, name) {
+  var id = node[exp], store = id && data[id]
+  if (name === undefined) return store || setData(node)
+  else {
+    if (store) {
+      if (name in store) return store[name]
+      var camelName = camelize(name)
+      if (camelName in store) return store[camelName]
+    }
+    return dataAttr.call($(node), name)
+  }
+}
+```
+
+获取 `node` 节点上指定的缓存值。
+
+```javascript
+if (name === undefined) return store || setData(node)
+```
+
+如果没有指定属性名，则将节点对应的缓存全部返回，如果缓存为空，则调用 `setData` 方法，返回 `node` 节点上所有的 `data-` 开头的属性值。
+
+```javascript
+if (name in store) return store[name]
+```
+
+如果指定的 `name` 在缓存 `store` 中，则将结果返回。
+
+```javascript
+var camelName = camelize(name)
+if (camelName in store) return store[camelName]
+```
+
+否则，将指定的 `name` 转换成驼峰式，再从缓存 `store` 中查找，将找到的结果返回。这是兼容 `camel-name` 这样的参数形式，提供更灵活的 `API` 。
+
+如果缓存中都没找到，则回退到用 `$.fn.data` 查找，其实就是查找 `data-` 属性上的值，这个方法后面会分析到。
 
 ## 系列文章
 
