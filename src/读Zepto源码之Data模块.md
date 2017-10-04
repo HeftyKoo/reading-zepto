@@ -154,7 +154,7 @@ $.isPlainObject(name) ?
 
 最后，判断集合是否不为空（ `0 in this` ）， 如果为空，则直接返回 `undefined` ，否则，调用 `getData` ，返回第一个元素节点对应的 `name` 的缓存。
 
-### removeData
+### .removeData()
 
 ```javascript
 $.fn.removeData = function(names) {
@@ -194,6 +194,31 @@ if (store) $.each(names || store, function(key){
 ```
 
 如果 `names` 存在，则删除指定的数据，否则将 `store` 缓存的数据全部删除。
+
+### .remove()和.empty()方法的改写
+
+```javascript
+;['remove', 'empty'].forEach(function(methodName){
+  var origFn = $.fn[methodName]
+  $.fn[methodName] = function() {
+    var elements = this.find('*')
+    if (methodName === 'remove') elements = elements.add(this)
+    elements.removeData()
+    return origFn.call(this)
+  }
+})
+```
+
+原有的 `remove` 和 `empty` 方法，都会有 `DOM` 节点的移除，在移除 `DOM` 节点后，对应节点的缓存数据也就没有什么意义了，所有在移除 `DOM` 节点后，也需要将节点对应的数据也清空，以释放内存。
+
+```javascript
+var elements = this.find('*')
+if (methodName === 'remove') elements = elements.add(this)
+```
+
+`elements` 为所有下级节点，如果为 `remove` 方法，则节点自身也是要被移除的，所以需要将自身也加入到节点中。
+
+最后调用 `removeData` 方法，不传参清空所有数据，在清空数据后，再调用原来的方法移除节点。
 
 ## 系列文章
 
