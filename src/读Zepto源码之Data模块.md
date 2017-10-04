@@ -220,6 +220,31 @@ if (methodName === 'remove') elements = elements.add(this)
 
 最后调用 `removeData` 方法，不传参清空所有数据，在清空数据后，再调用原来的方法移除节点。
 
+## 工具方法
+
+### $.data
+
+```javascript
+$.data = function(elem, name, value) {
+  return $(elem).data(name, value)
+}
+```
+
+`data` 最后调用的也就是 `DOM` 的 `data` 方法。
+
+### $.hasData
+
+```javascript
+$.hasData = function(elem) {
+  var id = elem[exp], store = id && data[id]
+  return store ? !$.isEmptyObject(store) : false
+}
+```
+
+判断某个元素是否已经有缓存的数据。
+
+首先通过从缓存 `data` 中，取出对应 `DOM` 的缓存 `store` ，如果 `store` 存在，并且不为空，则返回 `true` ，其实情况返回 `false` 。 
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
