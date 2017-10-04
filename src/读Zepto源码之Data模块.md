@@ -154,6 +154,47 @@ $.isPlainObject(name) ?
 
 最后，判断集合是否不为空（ `0 in this` ）， 如果为空，则直接返回 `undefined` ，否则，调用 `getData` ，返回第一个元素节点对应的 `name` 的缓存。
 
+### removeData
+
+```javascript
+$.fn.removeData = function(names) {
+  if (typeof names == 'string') names = names.split(/\s+/)
+  return this.each(function(){
+    var id = this[exp], store = id && data[id]
+    if (store) $.each(names || store, function(key){
+      delete store[names ? camelize(this) : key]
+    })
+  })
+}
+```
+
+`removeData` 用来删除缓存的数据，如果没有传递参数，则全部清空，如果有传递参数，则只删除指定的数据。
+
+`names` 可以为数组，指定需要删除的一组数据，也可以为以空格分割的字符串。
+
+```javascript
+if (typeof names == 'string') names = names.split(/\s+/)
+```
+
+如果检测到 `names` 为字符串，则先将字符串转换成数组。
+
+```javascript
+return this.each(function(){
+  var id = this[exp], store = id && data[id]
+ ...
+})
+```
+
+遍历元素，对所有的元素都进行删除操作，找出和元素对应的缓存 `store` 。
+
+```javascript
+if (store) $.each(names || store, function(key){
+  delete store[names ? camelize(this) : key]
+})
+```
+
+如果 `names` 存在，则删除指定的数据，否则将 `store` 缓存的数据全部删除。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
