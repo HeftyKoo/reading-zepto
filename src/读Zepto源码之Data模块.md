@@ -63,7 +63,7 @@ var id = node[exp] || (node[exp] = ++$.uuid)
 store = data[id] || (data[id] = attributeData(node))
 ```
 
-从 `data` 中获取节点的之前缓存的数据，如果之前没有缓存数据，则调用 `attributeData` 方法，获取节点上所有以 `data-` 开头的属性值，缓存到 `data` 对象中。
+从 `data` 中获取节点之前缓存的数据，如果之前没有缓存数据，则调用 `attributeData` 方法，获取节点上所有以 `data-` 开头的属性值，缓存到 `data` 对象中。
 
 ```javascript
 store[camelize(name)] = value
@@ -88,13 +88,13 @@ function getData(node, name) {
 }
 ```
 
-获取 `node` 节点上指定的缓存值。
+获取 `node` 节点指定的缓存值。
 
 ```javascript
 if (name === undefined) return store || setData(node)
 ```
 
-如果没有指定属性名，则将节点对应的缓存全部返回，如果缓存为空，则调用 `setData` 方法，返回 `node` 节点上所有的 `data-` 开头的属性值。
+如果没有指定属性名，则将节点对应的缓存全部返回，如果缓存为空，则调用 `setData` 方法，返回 `node` 节点上所有以 `data-` 开头的属性值。
 
 ```javascript
 if (name in store) return store[name]
@@ -146,13 +146,13 @@ $.isPlainObject(name) ?
 
 `data` 的第一个参数还支持对象的传值，例如 `$(el).data({key1: 'value1'})` 。如果是对象，则对象里的属性为需要设置的缓存名，值为缓存值。
 
-因此，也遍历所有元素，调用 `setData` 设置缓存。
+因此，遍历所有元素，调用 `setData` 设置缓存。
 
 ```javascript
 0 in this ? getData(this[0], name) : undefined
 ```
 
-最后，判断集合是否不为空（ `0 in this` ）， 如果为空，则直接返回 `undefined` ，否则，调用 `getData` ，返回第一个元素节点对应的 `name` 的缓存。
+最后，判断集合是否不为空（ `0 in this` ）， 如果为空，则直接返回 `undefined` ，否则，调用 `getData` ，返回第一个元素节点对应 `name` 的缓存。
 
 ### .removeData()
 
