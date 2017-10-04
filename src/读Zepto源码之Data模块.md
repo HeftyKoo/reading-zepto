@@ -111,6 +111,49 @@ if (camelName in store) return store[camelName]
 
 如果缓存中都没找到，则回退到用 `$.fn.data` 查找，其实就是查找 `data-` 属性上的值，这个方法后面会分析到。
 
+## DOM方法
+
+### .data()
+
+```javascript
+$.fn.data = function(name, value) {
+  return value === undefined ?
+    $.isPlainObject(name) ?
+    this.each(function(i, node){
+    $.each(name, function(key, value){ setData(node, key, value) })
+  }) :
+  (0 in this ? getData(this[0], name) : undefined) :
+  this.each(function(){ setData(this, name, value) })
+}
+```
+
+`data` 方法可以设置或者获取对应 `node` 节点的缓存数据，最终分别调用的是 `setData` 和 `getData` 方法。
+
+分析这段代码，照例还是将三元表达式一个一个拆解，来看看都做了什么事情。
+
+```javascript
+value === undefined ? 三元表达式 : this.each(function(){ setData(this, name, value) })
+```
+
+先看第一层，当有传递 `name` 和 `value` 时，表明是设置缓存，遍历所有元素，分别调用 `setData` 方法设置缓存。
+
+```javascript
+$.isPlainObject(name) ?
+    this.each(function(i, node){
+    $.each(name, function(key, value){ setData(node, key, value) })
+  }) : 三元表达式
+```
+
+`data` 的第一个参数还支持对象的传值，例如 `$(el).data({key1: 'value1'})` 。如果是对象，则对象里的属性为需要设置的缓存名，值为缓存值。
+
+因此，也遍历所有元素，调用 `setData` 设置缓存。
+
+```javascript
+0 in this ? getData(this[0], name) : undefined
+```
+
+最后，判断集合是否不为空（ `0 in this` ）， 如果为空，则直接返回 `undefined` ，否则，调用 `getData` ，返回第一个元素节点对应的 `name` 的缓存。
+
 ## 系列文章
 
 1. [读Zepto源码之代码结构](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8B%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84.md)
