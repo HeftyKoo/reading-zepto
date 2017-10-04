@@ -33,6 +33,7 @@
 21. [读Zepto源码之fx_methods模块](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8Bfx_methods%E6%A8%A1%E5%9D%97.md)
 22. [读Zepto源码之Stack模块](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8BStack%E6%A8%A1%E5%9D%97.md)
 23. [读Zepto源码之Form模块](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8BForm%E6%A8%A1%E5%9D%97.md)
+24. [读Zepto源码之Data模块](https://github.com/yeyuqiudeng/reading-zepto/blob/master/src/%E8%AF%BBZepto%E6%BA%90%E7%A0%81%E4%B9%8BData%E6%A8%A1%E5%9D%97.md)
 
 
 ### 附文
