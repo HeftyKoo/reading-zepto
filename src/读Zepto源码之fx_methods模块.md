@@ -2,6 +2,8 @@
 
 `fx` 模块提供了 `animate` 动画方法，`fx_methods` 利用 `animate` 方法，提供一些常用的动画方法。所以 `fx_methods` 模块依赖于 `fx` 模块，在引入 `fx_methods` 前必须引入 `fx` 模块。
 
+读 Zepto 源码系列文章已经放到了github上，欢迎star: [reading-zepto](https://github.com/yeyuqiudeng/reading-zepto)
+
 ## 源码版本
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
