@@ -8,6 +8,11 @@
 
 本文阅读的源码为 [zepto1.2.0](https://github.com/madrobby/zepto/tree/v1.2.0)
 
+## GitBook
+
+《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
+
+
 ## 改写原有的方法
 
 ```javascript
@@ -42,10 +47,6 @@ $.fn.end = function() {
 ```
 
 `end` 方法是将集合还原到前一个状态，其实就是将上一个集合返回。
-
-## GitBook
-
-《[reading-zepto](https://yeyuqiudeng.gitbooks.io/reading-zepto/content/)》
 
 ## 系列文章
 
