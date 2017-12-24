@@ -76,7 +76,7 @@ simpleSelectorRE = /^[\w-]*$/,
 
 ### 排除不合法的element
 
-`element.nodeType !== 1 && element.nodeType !== 9 && element.nodeType !== 11` 。`1` 对应的是 `Node.ELEMENT_NODE` ，`10` 对应的是 `Node.DOCUMENT_TYPE_NODE` ， `11` 对应的是 `Node.DOCUMENT_FRAGMENT_NODE` ，如果不为以上三种类型，直接返回 `[]`。 
+`element.nodeType !== 1 && element.nodeType !== 9 && element.nodeType !== 11` 。`1` 对应的是 `Node.ELEMENT_NODE` ，`9` 对应的是 `Node.DOCUMENT_NODE` ， `11` 对应的是 `Node.DOCUMENT_FRAGMENT_NODE` ，如果不为以上三种类型，直接返回 `[]`。 
 
 ###  终极三元表达式
 
