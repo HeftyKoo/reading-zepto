@@ -219,7 +219,7 @@ isArray = Array.isArray ||
 
 如果浏览器支持数组的 `isArray` 原生方法，就采用原生方法，否则检测数据是否为 `Array` 的实例。
 
-我们都知道，`instanceof` 的检测的原理是查找实例的 `prototype` 是否在构造函数的原型链上，如果在，则返回 `true`。 所以用 `instanceof` 可能会得到不太准确的结果。例如：
+我们都知道，`instanceof` 的检测的原理是查找构造函数的 `prototype` 是否在实例的原型链上，如果在，则返回 `true`。 所以用 `instanceof` 可能会得到不太准确的结果。例如：
 
 index.html
 
